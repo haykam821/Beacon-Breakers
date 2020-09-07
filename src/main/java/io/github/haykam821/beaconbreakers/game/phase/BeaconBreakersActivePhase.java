@@ -95,8 +95,8 @@ public class BeaconBreakersActivePhase {
 			player.setGameMode(GameMode.SURVIVAL);
 			player.giveItemStack(new ItemStack(Main.RESPAWN_BEACONS.getRandom(this.world.getRandom())));
 
-			player.applyStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, this.invulnerability, 1, true, false));
-			player.applyStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, this.invulnerability, 127, true, false));
+			player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, this.invulnerability, 1, true, false));
+			player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, this.invulnerability, 127, true, false));
 
 			BeaconBreakersActivePhase.spawn(this.world, this.map, this.config.getMapConfig(), player);
 		}

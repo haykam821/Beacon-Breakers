@@ -1,0 +1,28 @@
+{
+	"schemaVersion": 1,
+	"id": "beaconbreakers",
+	"version": "${version}",
+	"name": "Beacon Breakers",
+	"description": "A hide or hunt minigame for Minecraft.",
+	"authors": [
+		"haykam821"
+	],
+	"contact": {
+		"homepage": "https://github.com/haykam821/Beacon-Breakers#readme",
+		"issues": "https://github.com/haykam821/Beacon-Breakers/issues"
+	},
+	"entrypoints": {
+		"main": [
+			"io.github.haykam821.beaconbreakers.Main"
+		]
+	},
+	"mixins": [
+		"beaconbreakers.mixin.json"
+	],
+	"accessWidener": "beaconbreakers.accesswidener",
+	"license": "MIT",
+	"icon": "assets/beaconbreakers/icon.png",
+	"depends": {
+		"fabricloader": ">=0.4.0"
+	}
+}

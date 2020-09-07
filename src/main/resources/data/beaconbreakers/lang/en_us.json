@@ -1,0 +1,9 @@
+{
+	"text.beaconbreakers.eliminate": "%s has been eliminated!",
+	"text.beaconbreakers.invulnerability_ended": "Beacons are no longer invulnerable to mining.",
+	"text.beaconbreakers.win": "%s has won the game!",
+	"text.beaconbreakers.win.none": "Nobody won the game!",
+	"text.beaconbreakers.beacon_break": "%s's beacon was broken by %s!",
+	"text.beaconbreakers.cannot_break_own_beacon": "You cannot break your own beacon.",
+	"text.beaconbreakers.cannot_break_invulnerable_beacon": "You cannot break a beacon during the invulnerability period."
+}

@@ -1,0 +1,3 @@
+accessWidener	v1	named
+accessible	method	net/minecraft/entity/LivingEntity	drop	(Lnet/minecraft/entity/damage/DamageSource;)V
+accessible	method	net/minecraft/entity/player/PlayerEntity	dropShoulderEntities	()V

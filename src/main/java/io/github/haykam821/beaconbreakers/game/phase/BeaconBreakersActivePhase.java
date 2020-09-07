@@ -132,6 +132,7 @@ public class BeaconBreakersActivePhase {
 	}
 
 	private void eliminate(PlayerEntry entry) {
+		this.setSpectator(entry.getPlayer());
 		this.players.remove(entry);
 		this.gameWorld.getPlayerSet().sendMessage(new TranslatableText("text.beaconbreakers.eliminate", entry.getPlayer().getDisplayName()).formatted(Formatting.RED));
 	}

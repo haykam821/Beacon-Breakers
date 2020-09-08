@@ -28,17 +28,18 @@ public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
 	private static final BlockState BARRIER = Blocks.BARRIER.getDefaultState();
 
 	private final BeaconBreakersMapConfig mapConfig;
+	private final long seed;
 	private final ChunkGenerator chunkGenerator;
 
 	public BeaconBreakersChunkGenerator(MinecraftServer server, BeaconBreakersMapConfig mapConfig) {
 		super(server);
 		this.mapConfig = mapConfig;
 
-		long seed = server.getOverworld().getRandom().nextLong();
-		BiomeSource biomeSource = new VanillaLayeredBiomeSource(seed, false, false, server.getRegistryManager().get(Registry.BIOME_KEY));
+		this.seed = server.getOverworld().getRandom().nextLong();
+		BiomeSource biomeSource = new VanillaLayeredBiomeSource(this.seed, false, false, server.getRegistryManager().get(Registry.BIOME_KEY));
 		
 		ChunkGeneratorSettings chunkGeneratorSettings = BuiltinRegistries.CHUNK_GENERATOR_SETTINGS.get(mapConfig.getChunkGeneratorSettingsId());
-		this.chunkGenerator = new NoiseChunkGenerator(biomeSource, seed, () -> chunkGeneratorSettings);
+		this.chunkGenerator = new NoiseChunkGenerator(biomeSource, this.seed, () -> chunkGeneratorSettings);
 	}
 
 	private boolean isChunkPosWithinArea(ChunkPos chunkPos) {
@@ -89,7 +90,7 @@ public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
 		Biome biome = this.chunkGenerator.getBiomeSource().getBiomeForNoiseGen((chunkX << 2) + 2, 2, (chunkZ << 2) + 2);
 	
 		ChunkRandom chunkRandom = new ChunkRandom();
-		long populationSeed = chunkRandom.setPopulationSeed(region.getSeed(), pos.getX(), pos.getZ());
+		long populationSeed = chunkRandom.setPopulationSeed(this.seed, pos.getX(), pos.getZ());
 		
 		biome.generateFeatureStep(structures, this.chunkGenerator, region, populationSeed, chunkRandom, pos);
 
@@ -148,7 +149,7 @@ public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
 	@Override
 	public void carve(long seed, BiomeAccess access, Chunk chunk, Carver carver) {
 		if (this.isChunkWithinArea(chunk)) {
-			this.chunkGenerator.carve(seed, access, chunk, carver);
+			this.chunkGenerator.carve(this.seed, access, chunk, carver);
 		}
 	}
 

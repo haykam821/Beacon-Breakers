@@ -181,6 +181,14 @@ public class BeaconBreakersActivePhase {
 	}
 
 	private ActionResult onPlayerDeath(ServerPlayerEntity player, DamageSource source) {
+		if (!this.config.shouldKeepInventory()) {
+			player.vanishCursedItems();
+			player.inventory.dropAll();
+
+			player.dropXp();
+			player.dropShoulderEntities();
+		}
+
 		PlayerEntry entry = this.getEntryFromPlayer(player);
 		if (entry != null) {
 			if (this.world.getGameRules().getBoolean(GameRules.SHOW_DEATH_MESSAGES)) {
@@ -196,11 +204,6 @@ public class BeaconBreakersActivePhase {
 			}
 		}
 		
-		if (!this.config.shouldKeepInventory()) {
-			player.drop(source);
-			player.dropShoulderEntities();
-		}
-
 		player.setHealth(player.getMaxHealth());
 		player.getHungerManager().setFoodLevel(20);
 

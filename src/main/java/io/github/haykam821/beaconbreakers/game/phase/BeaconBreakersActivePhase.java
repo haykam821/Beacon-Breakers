@@ -1,5 +1,6 @@
 package io.github.haykam821.beaconbreakers.game.phase;
 
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -138,9 +139,7 @@ public class BeaconBreakersActivePhase {
 		player.setGameMode(GameMode.SPECTATOR);
 	}
 
-	private void eliminate(PlayerEntry entry) {
-		this.setSpectator(entry.getPlayer());
-		this.players.remove(entry);
+	private void sendEliminateMessage(PlayerEntry entry) {
 		this.gameWorld.getPlayerSet().sendMessage(new TranslatableText("text.beaconbreakers.eliminate", entry.getPlayer().getDisplayName()).formatted(Formatting.RED));
 	}
 
@@ -160,9 +159,15 @@ public class BeaconBreakersActivePhase {
 	}
 
 	private void removePlayer(ServerPlayerEntity player) {
-		this.players.removeIf(entry -> {
-			return player.equals(entry.getPlayer());
-		});
+		Iterator<PlayerEntry> iterator = this.players.iterator();
+		while (iterator.hasNext()) {
+			PlayerEntry entry = iterator.next();
+
+			if (player.equals(entry.getPlayer())) {
+				iterator.remove();
+				this.sendEliminateMessage(entry);
+			}
+		}
 	}
 
 	private ActionResult attemptBeaconRespawn(PlayerEntry entry) {
@@ -206,7 +211,9 @@ public class BeaconBreakersActivePhase {
 				if (this.invulnerability > 0) {
 					BeaconBreakersActivePhase.spawn(this.world, this.map, this.config.getMapConfig(), entry.getPlayer());
 				} else {
-					this.eliminate(entry);
+					this.setSpectator(entry.getPlayer());
+					this.sendEliminateMessage(entry);
+					this.players.remove(entry);
 				}
 			}
 		}

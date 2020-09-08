@@ -170,6 +170,18 @@ public class BeaconBreakersActivePhase {
 		}
 	}
 
+	private Vec3d getRespawnPos(BlockPos beaconPos) {
+		Optional<Vec3d> spawnOptional = RespawnAnchorBlock.findRespawnPosition(EntityType.PLAYER, world, beaconPos);
+		if (spawnOptional.isPresent()) {
+			Vec3d spawn = spawnOptional.get();
+			if (spawn.getY() <= 255) {
+				return spawn;
+			}
+		}
+	
+		return new Vec3d(beaconPos.getX() + 0.5, beaconPos.getY(), beaconPos.getZ() + 0.5);
+	}
+
 	private ActionResult attemptBeaconRespawn(PlayerEntry entry) {
 		BlockPos beaconPos = entry.getBeaconPos();
 		if (beaconPos == null) {
@@ -181,13 +193,8 @@ public class BeaconBreakersActivePhase {
 			return ActionResult.FAIL;
 		}
 
-		Optional<Vec3d> spawnOptional = RespawnAnchorBlock.findRespawnPosition(EntityType.PLAYER, world, beaconPos);
-		if (spawnOptional.isPresent()) {
-			Vec3d spawn = spawnOptional.get();
-			entry.getPlayer().teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), 0, 0);
-		} else {
-			entry.getPlayer().teleport(world, beaconPos.getX(), beaconPos.getY(), beaconPos.getZ(), 0, 0);
-		}
+		Vec3d spawn = this.getRespawnPos(beaconPos); 
+		entry.getPlayer().teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), 0, 0);;
 
 		return ActionResult.SUCCESS;
 	}

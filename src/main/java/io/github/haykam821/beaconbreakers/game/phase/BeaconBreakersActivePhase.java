@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import io.github.haykam821.beaconbreakers.Main;
 import io.github.haykam821.beaconbreakers.game.BeaconBreakersConfig;
+import io.github.haykam821.beaconbreakers.game.InvulnerabilityTimerBar;
 import io.github.haykam821.beaconbreakers.game.PlayerEntry;
 import io.github.haykam821.beaconbreakers.game.event.AfterBlockPlaceListener;
 import io.github.haykam821.beaconbreakers.game.map.BeaconBreakersMap;
@@ -48,6 +49,7 @@ public class BeaconBreakersActivePhase {
 	private final BeaconBreakersMap map;
 	private final BeaconBreakersConfig config;
 	private final Set<PlayerEntry> players;
+	private final InvulnerabilityTimerBar bar;
 	private boolean singleplayer;
 	private int invulnerability;
 
@@ -57,6 +59,7 @@ public class BeaconBreakersActivePhase {
 		this.map = map;
 		this.config = config;
 
+		this.bar = new InvulnerabilityTimerBar(this);
 		this.players = players.stream().map(player -> {
 			return new PlayerEntry(player);
 		}).collect(Collectors.toSet());
@@ -104,10 +107,14 @@ public class BeaconBreakersActivePhase {
 	
 	private void tick() {
 		if (this.invulnerability > 0) {
+			this.bar.tick();
+
 			this.invulnerability -= 1;
 			if (this.invulnerability == 0) {
 				this.gameWorld.getPlayerSet().sendSound(SoundEvents.BLOCK_END_PORTAL_SPAWN, SoundCategory.PLAYERS, 1, 1);
-				this.gameWorld.getPlayerSet().sendMessage(new TranslatableText("text.beaconbreakers.invulnerability_ended").formatted(Formatting.GOLD));
+				this.gameWorld.getPlayerSet().sendMessage(new TranslatableText("text.beaconbreakers.invulnerability.ended").formatted(Formatting.GOLD));
+
+				this.bar.remove();
 			}
 		}
 	
@@ -203,7 +210,7 @@ public class BeaconBreakersActivePhase {
 				}
 			}
 		}
-		
+
 		player.setHealth(player.getMaxHealth());
 		player.getHungerManager().setFoodLevel(20);
 
@@ -255,6 +262,18 @@ public class BeaconBreakersActivePhase {
 		
 		if (entry.getBeaconPos() != null) return;
 		entry.setBeaconPos(pos);
+	}
+
+	public GameWorld getGameWorld() {
+		return this.gameWorld;
+	}
+
+	public BeaconBreakersConfig getConfig() {
+		return this.config;
+	}
+
+	public int getInvulnerability() {
+		return this.invulnerability;
 	}
 
 	public static void spawn(ServerWorld world, BeaconBreakersMap map, BeaconBreakersMapConfig mapConfig, ServerPlayerEntity player) {

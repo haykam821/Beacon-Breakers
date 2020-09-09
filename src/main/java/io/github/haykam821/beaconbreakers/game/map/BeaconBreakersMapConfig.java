@@ -10,18 +10,21 @@ public class BeaconBreakersMapConfig {
 		return instance.group(
 			Identifier.CODEC.fieldOf("settings").forGetter(BeaconBreakersMapConfig::getChunkGeneratorSettingsId),
 			Codec.INT.optionalFieldOf("x", 16).forGetter(BeaconBreakersMapConfig::getX),
-			Codec.INT.optionalFieldOf("z", 16).forGetter(BeaconBreakersMapConfig::getZ)
+			Codec.INT.optionalFieldOf("z", 16).forGetter(BeaconBreakersMapConfig::getZ),
+			Codec.BOOL.optionalFieldOf("chaos", false).forGetter(BeaconBreakersMapConfig::useChaoticGenerator)
 		).apply(instance, BeaconBreakersMapConfig::new);
 	});
 
 	private final Identifier chunkGeneratorSettingsId;
 	private final int x;
 	private final int z;
+	private final boolean chaos;
 
-	public BeaconBreakersMapConfig(Identifier chunkGeneratorSettingsId, int x, int z) {
+	public BeaconBreakersMapConfig(Identifier chunkGeneratorSettingsId, int x, int z, boolean chaos) {
 		this.chunkGeneratorSettingsId = chunkGeneratorSettingsId;
 		this.x = x;
 		this.z = z;
+		this.chaos = chaos;
 	}
 
 	public Identifier getChunkGeneratorSettingsId() {
@@ -34,5 +37,9 @@ public class BeaconBreakersMapConfig {
 
 	public int getZ() {
 		return this.z;
+	}
+
+	public boolean useChaoticGenerator() {
+		return this.chaos;
 	}
 }

@@ -22,6 +22,8 @@ import net.minecraft.world.gen.StructureAccessor;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
+
+import io.github.haykam821.beaconbreakers.game.map.gen.ChaosChunkGenerator;
 import xyz.nucleoid.plasmid.game.world.generator.GameChunkGenerator;
 
 public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
@@ -39,7 +41,7 @@ public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
 		BiomeSource biomeSource = new VanillaLayeredBiomeSource(this.seed, false, false, server.getRegistryManager().get(Registry.BIOME_KEY));
 		
 		ChunkGeneratorSettings chunkGeneratorSettings = BuiltinRegistries.CHUNK_GENERATOR_SETTINGS.get(mapConfig.getChunkGeneratorSettingsId());
-		this.chunkGenerator = new NoiseChunkGenerator(biomeSource, this.seed, () -> chunkGeneratorSettings);
+		this.chunkGenerator = mapConfig.useChaoticGenerator() ? new ChaosChunkGenerator(biomeSource, this.seed, () -> chunkGeneratorSettings) : new NoiseChunkGenerator(biomeSource, this.seed, () -> chunkGeneratorSettings);
 	}
 
 	private boolean isChunkPosWithinArea(ChunkPos chunkPos) {

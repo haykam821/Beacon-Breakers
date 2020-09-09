@@ -2,3 +2,10 @@ accessWidener	v1	named
 accessible	method	net/minecraft/entity/LivingEntity	dropXp	()V
 accessible	method	net/minecraft/entity/player/PlayerEntity	vanishCursedItems	()V
 accessible	method	net/minecraft/entity/player/PlayerEntity	dropShoulderEntities	()V
+extendable	method	net/minecraft/world/gen/chunk/NoiseChunkGenerator	sampleNoiseColumn	([DII)V
+extendable	method	net/minecraft/world/gen/chunk/NoiseChunkGenerator	sampleNoise	(IIIDDDD)D
+accessible  field net/minecraft/world/gen/chunk/NoiseChunkGenerator noiseSizeY I
+accessible  field net/minecraft/world/gen/chunk/NoiseChunkGenerator lowerInterpolatedNoise Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;
+accessible  field net/minecraft/world/gen/chunk/NoiseChunkGenerator upperInterpolatedNoise Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;
+accessible  field net/minecraft/world/gen/chunk/NoiseChunkGenerator interpolationNoise Lnet/minecraft/util/math/noise/OctavePerlinNoiseSampler;
+extendable  class net/minecraft/world/gen/chunk/NoiseChunkGenerator

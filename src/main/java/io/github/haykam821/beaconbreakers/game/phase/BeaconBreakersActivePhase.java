@@ -118,6 +118,18 @@ public class BeaconBreakersActivePhase {
 				this.bar.remove();
 			}
 		}
+
+		Iterator<PlayerEntry> iterator = this.players.iterator();
+		while (iterator.hasNext()) {
+			PlayerEntry entry = iterator.next();
+			ServerPlayerEntity player = entry.getPlayer();
+
+			if (!this.map.getBox().contains(player.getBlockPos())) {
+				this.setSpectator(player);
+				this.sendEliminateMessage(entry);
+				iterator.remove();
+			}
+		}
 	
 		if (this.players.size() < 2) {
 			if (this.players.size() == 1 && this.singleplayer) return;
@@ -143,6 +155,12 @@ public class BeaconBreakersActivePhase {
 		this.gameWorld.getPlayerSet().sendMessage(new TranslatableText("text.beaconbreakers.eliminate", entry.getPlayer().getDisplayName()).formatted(Formatting.RED));
 	}
 
+	private void eliminate(PlayerEntry entry) {
+		this.setSpectator(entry.getPlayer());
+		this.sendEliminateMessage(entry);
+		this.players.remove(entry);
+	}
+
 	private PlayerEntry getEntryFromPlayer(ServerPlayerEntity player) {
 		for (PlayerEntry entry : this.players) {
 			if (player.equals(entry.getPlayer())) {
@@ -164,8 +182,9 @@ public class BeaconBreakersActivePhase {
 			PlayerEntry entry = iterator.next();
 
 			if (player.equals(entry.getPlayer())) {
-				iterator.remove();
+				this.setSpectator(player);
 				this.sendEliminateMessage(entry);
+				iterator.remove();
 			}
 		}
 	}
@@ -218,9 +237,7 @@ public class BeaconBreakersActivePhase {
 				if (this.invulnerability > 0) {
 					BeaconBreakersActivePhase.spawn(this.world, this.map, this.config.getMapConfig(), entry.getPlayer());
 				} else {
-					this.setSpectator(entry.getPlayer());
-					this.sendEliminateMessage(entry);
-					this.players.remove(entry);
+					this.eliminate(entry);
 				}
 			}
 		}

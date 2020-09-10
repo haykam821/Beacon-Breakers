@@ -101,6 +101,7 @@ public class BeaconBreakersActivePhase {
 
 			player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, this.invulnerability, 1, true, false));
 			player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, this.invulnerability, 127, true, false));
+			player.addStatusEffect(new StatusEffectInstance(StatusEffects.SATURATION, this.invulnerability, 127, true, false));
 
 			BeaconBreakersActivePhase.spawn(this.world, this.map, this.config.getMapConfig(), player);
 		}

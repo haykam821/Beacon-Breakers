@@ -292,6 +292,10 @@ public class BeaconBreakersActivePhase {
 		if (entry == null) return;
 		
 		if (entry.getBeaconPos() != null) return;
+		if (!this.map.getBox().contains(pos)) {
+			entry.getPlayer().sendMessage(new TranslatableText("text.beaconbreakers.cannot_place_out_of_bounds_beacon").formatted(Formatting.RED), false);
+			return;
+		}
 		entry.setBeaconPos(pos);
 	}
 

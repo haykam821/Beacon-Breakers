@@ -1,5 +1,6 @@
 {
 	"type": "beaconbreakers:beacon_breakers",
+	"name": "Amplified Beacon Breakers with Keep Inventory",
 	"map": {
 		"settings": "minecraft:amplified"
 	},

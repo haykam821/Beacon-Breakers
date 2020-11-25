@@ -1,5 +1,6 @@
 {
 	"type": "beaconbreakers:beacon_breakers",
+	"name": "Beacon Breakers",
 	"map": {
 		"settings": "minecraft:overworld"
 	},

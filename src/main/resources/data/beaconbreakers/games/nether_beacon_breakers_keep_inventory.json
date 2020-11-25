@@ -1,5 +1,6 @@
 {
 	"type": "beaconbreakers:beacon_breakers",
+	"name": "Nether Beacon Breakers with Keep Inventory",
 	"map": {
 		"settings": "minecraft:nether"
 	},

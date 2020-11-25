@@ -1,5 +1,6 @@
 {
 	"type": "beaconbreakers:beacon_breakers",
+	"name": "Amplified Beacon Breakers",
 	"map": {
 		"settings": "minecraft:amplified"
 	},

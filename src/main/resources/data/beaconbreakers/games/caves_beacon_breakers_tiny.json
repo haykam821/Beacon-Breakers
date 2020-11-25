@@ -1,5 +1,6 @@
 {
 	"type": "beaconbreakers:beacon_breakers",
+	"name": "Tiny Caves Beacon Breakers",
 	"map": {
 		"settings": "minecraft:caves",
 		"x": 5,

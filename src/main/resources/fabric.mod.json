@@ -23,6 +23,7 @@
 	"license": "MIT",
 	"icon": "assets/beaconbreakers/icon.png",
 	"depends": {
-		"fabricloader": ">=0.4.0"
+		"fabricloader": ">=0.8.0",
+		"plasmid": ">=0.4.0"
 	}
 }

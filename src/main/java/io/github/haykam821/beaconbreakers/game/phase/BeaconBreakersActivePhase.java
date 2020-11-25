@@ -5,6 +5,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Sets;
+
 import io.github.haykam821.beaconbreakers.Main;
 import io.github.haykam821.beaconbreakers.game.BeaconBreakersConfig;
 import io.github.haykam821.beaconbreakers.game.InvulnerabilityTimerBar;
@@ -34,7 +36,7 @@ import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.World;
-import xyz.nucleoid.plasmid.game.GameWorld;
+import xyz.nucleoid.plasmid.game.GameSpace;
 import xyz.nucleoid.plasmid.game.event.BreakBlockListener;
 import xyz.nucleoid.plasmid.game.event.GameOpenListener;
 import xyz.nucleoid.plasmid.game.event.GameTickListener;
@@ -43,9 +45,10 @@ import xyz.nucleoid.plasmid.game.event.PlayerDeathListener;
 import xyz.nucleoid.plasmid.game.event.PlayerRemoveListener;
 import xyz.nucleoid.plasmid.game.rule.GameRule;
 import xyz.nucleoid.plasmid.game.rule.RuleResult;
+import xyz.nucleoid.plasmid.widget.GlobalWidgets;
 
 public class BeaconBreakersActivePhase {
-	private final GameWorld gameWorld;
+	private final GameSpace gameSpace;
 	private final ServerWorld world;
 	private final BeaconBreakersMap map;
 	private final BeaconBreakersConfig config;
@@ -54,13 +57,13 @@ public class BeaconBreakersActivePhase {
 	private boolean singleplayer;
 	private int invulnerability;
 
-	public BeaconBreakersActivePhase(GameWorld gameWorld, BeaconBreakersMap map, BeaconBreakersConfig config, Set<ServerPlayerEntity> players) {
-		this.gameWorld = gameWorld;
-		this.world = gameWorld.getWorld();
+	public BeaconBreakersActivePhase(GameSpace gameSpace, GlobalWidgets widgets, BeaconBreakersMap map, BeaconBreakersConfig config, Set<ServerPlayerEntity> players) {
+		this.gameSpace = gameSpace;
+		this.world = gameSpace.getWorld();
 		this.map = map;
 		this.config = config;
 
-		this.bar = new InvulnerabilityTimerBar(this);
+		this.bar = new InvulnerabilityTimerBar(this, widgets);
 		this.players = players.stream().map(player -> {
 			return new PlayerEntry(player);
 		}).collect(Collectors.toSet());
@@ -68,10 +71,12 @@ public class BeaconBreakersActivePhase {
 		this.invulnerability = this.config.getInvulnerability();
 	}
 
-	public static void open(GameWorld gameWorld, BeaconBreakersMap map, BeaconBreakersConfig config) {
-		BeaconBreakersActivePhase active = new BeaconBreakersActivePhase(gameWorld, map, config, gameWorld.getPlayers());
+	public static void open(GameSpace gameSpace, BeaconBreakersMap map, BeaconBreakersConfig config) {
+		gameSpace.openGame(game -> {
+			GlobalWidgets widgets = new GlobalWidgets(game);
+			Set<ServerPlayerEntity> players = Sets.newHashSet(gameSpace.getPlayers());
+			BeaconBreakersActivePhase active = new BeaconBreakersActivePhase(gameSpace, widgets, map, config, players);
 
-		gameWorld.openGame(game -> {
 			game.setRule(GameRule.BLOCK_DROPS, RuleResult.ALLOW);
 			game.setRule(GameRule.CRAFTING, RuleResult.ALLOW);
 			game.setRule(GameRule.FALL_DAMAGE, RuleResult.ALLOW);
@@ -113,8 +118,8 @@ public class BeaconBreakersActivePhase {
 
 			this.invulnerability -= 1;
 			if (this.invulnerability == 0) {
-				this.gameWorld.getPlayerSet().sendSound(SoundEvents.BLOCK_END_PORTAL_SPAWN, SoundCategory.PLAYERS, 1, 1);
-				this.gameWorld.getPlayerSet().sendMessage(new TranslatableText("text.beaconbreakers.invulnerability.ended").formatted(Formatting.GOLD));
+				this.gameSpace.getPlayers().sendSound(SoundEvents.BLOCK_END_PORTAL_SPAWN, SoundCategory.PLAYERS, 1, 1);
+				this.gameSpace.getPlayers().sendMessage(new TranslatableText("text.beaconbreakers.invulnerability.ended").formatted(Formatting.GOLD));
 
 				this.bar.remove();
 			}
@@ -135,8 +140,8 @@ public class BeaconBreakersActivePhase {
 		if (this.players.size() < 2) {
 			if (this.players.size() == 1 && this.singleplayer) return;
 
-			this.gameWorld.getPlayerSet().sendMessage(this.getEndingMessage().formatted(Formatting.GOLD));
-			this.gameWorld.close();
+			this.gameSpace.getPlayers().sendMessage(this.getEndingMessage().formatted(Formatting.GOLD));
+			this.gameSpace.close();
 		}
 	}
 	
@@ -153,7 +158,7 @@ public class BeaconBreakersActivePhase {
 	}
 
 	private void sendEliminateMessage(PlayerEntry entry) {
-		this.gameWorld.getPlayerSet().sendMessage(new TranslatableText("text.beaconbreakers.eliminate", entry.getPlayer().getDisplayName()).formatted(Formatting.RED));
+		this.gameSpace.getPlayers().sendMessage(new TranslatableText("text.beaconbreakers.eliminate", entry.getPlayer().getDisplayName()).formatted(Formatting.RED));
 	}
 
 	private void eliminate(PlayerEntry entry) {
@@ -231,7 +236,7 @@ public class BeaconBreakersActivePhase {
 		PlayerEntry entry = this.getEntryFromPlayer(player);
 		if (entry != null) {
 			if (this.world.getGameRules().getBoolean(GameRules.SHOW_DEATH_MESSAGES)) {
-				this.gameWorld.getPlayerSet().sendMessage(player.getDamageTracker().getDeathMessage());
+				this.gameSpace.getPlayers().sendMessage(player.getDamageTracker().getDeathMessage());
 			}
 
 			if (this.attemptBeaconRespawn(entry) == ActionResult.FAIL) {
@@ -255,8 +260,8 @@ public class BeaconBreakersActivePhase {
 	private void breakBeacon(PlayerEntry breaker, BlockPos pos) {
 		for (PlayerEntry entry : this.players) {
 			if (pos.equals(entry.getBeaconPos())) {
-				this.gameWorld.getPlayerSet().sendSound(SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.PLAYERS, 1, 1);
-				this.gameWorld.getPlayerSet().sendMessage(new TranslatableText("text.beaconbreakers.beacon_break", entry.getPlayer().getDisplayName(), breaker.getPlayer().getDisplayName()).formatted(Formatting.RED));
+				this.gameSpace.getPlayers().sendSound(SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.PLAYERS, 1, 1);
+				this.gameSpace.getPlayers().sendMessage(new TranslatableText("text.beaconbreakers.beacon_break", entry.getPlayer().getDisplayName(), breaker.getPlayer().getDisplayName()).formatted(Formatting.RED));
 
 				return;
 			}
@@ -300,8 +305,8 @@ public class BeaconBreakersActivePhase {
 		entry.setBeaconPos(pos);
 	}
 
-	public GameWorld getGameWorld() {
-		return this.gameWorld;
+	public GameSpace getGameSpace() {
+		return this.gameSpace;
 	}
 
 	public BeaconBreakersConfig getConfig() {

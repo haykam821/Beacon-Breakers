@@ -1,5 +1,6 @@
 {
 	"type": "beaconbreakers:beacon_breakers",
+	"name": "Floating Islands Beacon Breakers with Keep Inventory",
 	"map": {
 		"settings": "minecraft:floating_islands"
 	},

@@ -1,5 +1,6 @@
 {
 	"type": "beaconbreakers:beacon_breakers",
+	"name": "Nether Beacon Breakers",
 	"map": {
 		"settings": "minecraft:nether"
 	},

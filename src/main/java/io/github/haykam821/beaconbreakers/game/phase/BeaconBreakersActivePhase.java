@@ -36,6 +36,7 @@ import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.World;
+import xyz.nucleoid.plasmid.game.GameCloseReason;
 import xyz.nucleoid.plasmid.game.GameSpace;
 import xyz.nucleoid.plasmid.game.event.BreakBlockListener;
 import xyz.nucleoid.plasmid.game.event.GameOpenListener;
@@ -141,7 +142,7 @@ public class BeaconBreakersActivePhase {
 			if (this.players.size() == 1 && this.singleplayer) return;
 
 			this.gameSpace.getPlayers().sendMessage(this.getEndingMessage().formatted(Formatting.GOLD));
-			this.gameSpace.close();
+			this.gameSpace.close(GameCloseReason.FINISHED);
 		}
 	}
 	

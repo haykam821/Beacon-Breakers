@@ -9,6 +9,7 @@ import com.google.common.collect.Sets;
 
 import io.github.haykam821.beaconbreakers.Main;
 import io.github.haykam821.beaconbreakers.game.BeaconBreakersConfig;
+import io.github.haykam821.beaconbreakers.game.BeaconBreakersSidebar;
 import io.github.haykam821.beaconbreakers.game.InvulnerabilityTimerBar;
 import io.github.haykam821.beaconbreakers.game.PlayerEntry;
 import io.github.haykam821.beaconbreakers.game.event.AfterBlockPlaceListener;
@@ -55,6 +56,7 @@ public class BeaconBreakersActivePhase {
 	private final BeaconBreakersConfig config;
 	private final Set<PlayerEntry> players;
 	private final InvulnerabilityTimerBar bar;
+	private final BeaconBreakersSidebar sidebar;
 	private boolean singleplayer;
 	private int invulnerability;
 
@@ -64,6 +66,7 @@ public class BeaconBreakersActivePhase {
 		this.map = map;
 		this.config = config;
 
+		this.sidebar = new BeaconBreakersSidebar(widgets, this);
 		this.bar = new InvulnerabilityTimerBar(this, widgets);
 		this.players = players.stream().map(player -> {
 			return new PlayerEntry(player);
@@ -111,6 +114,8 @@ public class BeaconBreakersActivePhase {
 
 			BeaconBreakersActivePhase.spawn(this.world, this.map, this.config.getMapConfig(), player);
 		}
+
+		this.sidebar.update();
 	}
 	
 	private void tick() {
@@ -135,6 +140,7 @@ public class BeaconBreakersActivePhase {
 				this.setSpectator(player);
 				this.sendEliminateMessage(entry);
 				iterator.remove();
+				this.sidebar.update();
 			}
 		}
 	
@@ -166,6 +172,7 @@ public class BeaconBreakersActivePhase {
 		this.setSpectator(entry.getPlayer());
 		this.sendEliminateMessage(entry);
 		this.players.remove(entry);
+		this.sidebar.update();
 	}
 
 	private PlayerEntry getEntryFromPlayer(ServerPlayerEntity player) {
@@ -192,6 +199,7 @@ public class BeaconBreakersActivePhase {
 				this.setSpectator(player);
 				this.sendEliminateMessage(entry);
 				iterator.remove();
+				this.sidebar.update();
 			}
 		}
 	}
@@ -261,12 +269,16 @@ public class BeaconBreakersActivePhase {
 	private void breakBeacon(PlayerEntry breaker, BlockPos pos) {
 		for (PlayerEntry entry : this.players) {
 			if (pos.equals(entry.getBeaconPos())) {
+				entry.setBeaconBroken();
+
 				this.gameSpace.getPlayers().sendSound(SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.PLAYERS, 1, 1);
 				this.gameSpace.getPlayers().sendMessage(new TranslatableText("text.beaconbreakers.beacon_break", entry.getPlayer().getDisplayName(), breaker.getPlayer().getDisplayName()).formatted(Formatting.RED));
 
 				return;
 			}
 		}
+
+		this.sidebar.update();
 	}
 
 	private ActionResult onBreakBlock(ServerPlayerEntity player, BlockPos pos) {
@@ -303,7 +315,9 @@ public class BeaconBreakersActivePhase {
 			entry.getPlayer().sendMessage(new TranslatableText("text.beaconbreakers.cannot_place_out_of_bounds_beacon").formatted(Formatting.RED), false);
 			return;
 		}
+
 		entry.setBeaconPos(pos);
+		this.sidebar.update();
 	}
 
 	public GameSpace getGameSpace() {
@@ -316,6 +330,10 @@ public class BeaconBreakersActivePhase {
 
 	public int getInvulnerability() {
 		return this.invulnerability;
+	}
+
+	public Set<PlayerEntry> getPlayers() {
+		return this.players;
 	}
 
 	public static void spawn(ServerWorld world, BeaconBreakersMap map, BeaconBreakersMapConfig mapConfig, ServerPlayerEntity player) {

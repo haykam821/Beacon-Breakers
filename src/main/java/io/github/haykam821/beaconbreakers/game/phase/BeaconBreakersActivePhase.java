@@ -285,7 +285,7 @@ public class BeaconBreakersActivePhase {
 		PlayerEntry entry = this.getEntryFromPlayer(player);
 		if (entry == null) return ActionResult.PASS;
 
-		if (pos.equals(entry.getBeaconPos())) {
+		if (!this.config.shouldAllowSelfBreaking() && pos.equals(entry.getBeaconPos())) {
 			player.sendMessage(new TranslatableText("text.beaconbreakers.cannot_break_own_beacon").formatted(Formatting.RED), false);
 			return ActionResult.FAIL;
 		}

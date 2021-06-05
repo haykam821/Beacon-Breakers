@@ -12,7 +12,8 @@ public class BeaconBreakersConfig {
 			PlayerConfig.CODEC.fieldOf("players").forGetter(BeaconBreakersConfig::getPlayerConfig),
 			BeaconBreakersMapConfig.CODEC.fieldOf("map").forGetter(BeaconBreakersConfig::getMapConfig),
 			Codec.INT.optionalFieldOf("invulnerability", 2 * 60 * 20).forGetter(BeaconBreakersConfig::getInvulnerability),
-			Codec.BOOL.optionalFieldOf("keep_inventory", false).forGetter(BeaconBreakersConfig::shouldKeepInventory)
+			Codec.BOOL.optionalFieldOf("keep_inventory", false).forGetter(BeaconBreakersConfig::shouldKeepInventory),
+			Codec.BOOL.optionalFieldOf("allow_self_breaking", false).forGetter(BeaconBreakersConfig::shouldAllowSelfBreaking)
 		).apply(instance, BeaconBreakersConfig::new);
 	});
 
@@ -20,12 +21,14 @@ public class BeaconBreakersConfig {
 	private final BeaconBreakersMapConfig mapConfig;
 	private final int invulnerability;
 	private final boolean keepInventory;
+	private final boolean allowSelfBreaking;
 
-	public BeaconBreakersConfig(PlayerConfig playerConfig, BeaconBreakersMapConfig mapConfig, int invulnerability, boolean keepInventory) {
+	public BeaconBreakersConfig(PlayerConfig playerConfig, BeaconBreakersMapConfig mapConfig, int invulnerability, boolean keepInventory, boolean allowSelfBreaking) {
 		this.playerConfig = playerConfig;
 		this.mapConfig = mapConfig;
 		this.invulnerability = invulnerability;
 		this.keepInventory = keepInventory;
+		this.allowSelfBreaking = allowSelfBreaking;
 	}
 
 	public PlayerConfig getPlayerConfig() {
@@ -42,5 +45,9 @@ public class BeaconBreakersConfig {
 
 	public boolean shouldKeepInventory() {
 		return this.keepInventory;
+	}
+
+	public boolean shouldAllowSelfBreaking() {
+		return this.allowSelfBreaking;
 	}
 }

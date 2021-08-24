@@ -43,6 +43,7 @@ import xyz.nucleoid.plasmid.game.event.BreakBlockListener;
 import xyz.nucleoid.plasmid.game.event.GameOpenListener;
 import xyz.nucleoid.plasmid.game.event.GameTickListener;
 import xyz.nucleoid.plasmid.game.event.PlayerAddListener;
+import xyz.nucleoid.plasmid.game.event.PlayerDamageListener;
 import xyz.nucleoid.plasmid.game.event.PlayerDeathListener;
 import xyz.nucleoid.plasmid.game.event.PlayerRemoveListener;
 import xyz.nucleoid.plasmid.game.rule.GameRule;
@@ -94,6 +95,7 @@ public class BeaconBreakersActivePhase {
 			game.on(GameOpenListener.EVENT, active::open);
 			game.on(GameTickListener.EVENT, active::tick);
 			game.on(PlayerAddListener.EVENT, active::addPlayer);
+			game.on(PlayerDamageListener.EVENT, active::onPlayerDamage);
 			game.on(PlayerDeathListener.EVENT, active::onPlayerDeath);
 			game.on(PlayerRemoveListener.EVENT, active::removePlayer);
 		});
@@ -109,7 +111,6 @@ public class BeaconBreakersActivePhase {
 			player.giveItemStack(new ItemStack(Main.RESPAWN_BEACONS.getRandom(this.world.getRandom())));
 
 			player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, this.invulnerability, 1, true, false));
-			player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, this.invulnerability, 127, true, false));
 			player.addStatusEffect(new StatusEffectInstance(StatusEffects.SATURATION, this.invulnerability, 127, true, false));
 
 			BeaconBreakersActivePhase.spawn(this.world, this.map, this.config.getMapConfig(), player);
@@ -231,6 +232,10 @@ public class BeaconBreakersActivePhase {
 		entry.getPlayer().teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), 0, 0);;
 
 		return ActionResult.SUCCESS;
+	}
+
+	private ActionResult onPlayerDamage(ServerPlayerEntity player, DamageSource source, float amount) {
+		return this.invulnerability > 0 ? ActionResult.FAIL : ActionResult.PASS;
 	}
 
 	private ActionResult onPlayerDeath(ServerPlayerEntity player, DamageSource source) {

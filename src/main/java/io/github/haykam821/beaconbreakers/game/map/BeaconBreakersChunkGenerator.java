@@ -1,5 +1,6 @@
 package io.github.haykam821.beaconbreakers.game.map;
 
+import io.github.haykam821.beaconbreakers.mixin.ChunkGeneratorAccessor;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.server.MinecraftServer;
@@ -31,15 +32,24 @@ public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
 	private final long seed;
 	private final ChunkGenerator chunkGenerator;
 
-	public BeaconBreakersChunkGenerator(MinecraftServer server, BeaconBreakersMapConfig mapConfig) {
+	public BeaconBreakersChunkGenerator(MinecraftServer server, BeaconBreakersMapConfig mapConfig, ChunkGenerator chunkGenerator) {
 		super(server);
 		this.mapConfig = mapConfig;
 
-		this.seed = server.getOverworld().getRandom().nextLong();
-		BiomeSource biomeSource = new VanillaLayeredBiomeSource(this.seed, false, false, server.getRegistryManager().get(Registry.BIOME_KEY));
+		this.seed = ((ChunkGeneratorAccessor) chunkGenerator).getWorldSeed();
+		this.chunkGenerator = chunkGenerator;
+	}
+
+	public BeaconBreakersChunkGenerator(MinecraftServer server, BeaconBreakersMapConfig mapConfig) {
+		this(server, mapConfig, BeaconBreakersChunkGenerator.createChunkGenerator(server, mapConfig));
+	}
+
+	private static ChunkGenerator createChunkGenerator(MinecraftServer server, BeaconBreakersMapConfig mapConfig) {
+		long seed = server.getOverworld().getRandom().nextLong();
+		BiomeSource biomeSource = new VanillaLayeredBiomeSource(seed, false, false, server.getRegistryManager().get(Registry.BIOME_KEY));
 		
 		ChunkGeneratorSettings chunkGeneratorSettings = BuiltinRegistries.CHUNK_GENERATOR_SETTINGS.get(mapConfig.getChunkGeneratorSettingsId());
-		this.chunkGenerator = new NoiseChunkGenerator(biomeSource, this.seed, () -> chunkGeneratorSettings);
+		return new NoiseChunkGenerator(biomeSource, seed, () -> chunkGeneratorSettings);
 	}
 
 	private boolean isChunkPosWithinArea(ChunkPos chunkPos) {

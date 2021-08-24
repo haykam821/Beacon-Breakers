@@ -10,8 +10,13 @@ public final class BeaconBreakersMap {
 
 	public BeaconBreakersMap(MinecraftServer server, BeaconBreakersMapConfig mapConfig) {
 		this.mapConfig = mapConfig;
-		this.chunkGenerator = new BeaconBreakersChunkGenerator(server, this.mapConfig);
 		this.box = new BlockBox(1, 1, 1, mapConfig.getX() * 16 - 2, 254, mapConfig.getZ() * 16 - 2);
+
+		if (mapConfig.getChunkGenerator().isPresent()) {
+			this.chunkGenerator = new BeaconBreakersChunkGenerator(server, this.mapConfig, mapConfig.getChunkGenerator().get());
+		} else {
+			this.chunkGenerator = new BeaconBreakersChunkGenerator(server, this.mapConfig);
+		}
 	}
 
 	public BeaconBreakersChunkGenerator getChunkGenerator() {

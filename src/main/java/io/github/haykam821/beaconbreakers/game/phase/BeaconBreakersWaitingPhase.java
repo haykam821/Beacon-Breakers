@@ -19,7 +19,6 @@ import xyz.nucleoid.plasmid.game.event.PlayerDeathListener;
 import xyz.nucleoid.plasmid.game.event.RequestStartListener;
 import xyz.nucleoid.plasmid.game.player.JoinResult;
 import xyz.nucleoid.plasmid.game.rule.GameRule;
-import xyz.nucleoid.plasmid.game.rule.RuleResult;
 
 public class BeaconBreakersWaitingPhase {
 	private final GameSpace gameSpace;
@@ -41,24 +40,24 @@ public class BeaconBreakersWaitingPhase {
 			.setDefaultGameMode(GameMode.ADVENTURE);
 
 		return context.createOpenProcedure(worldConfig, game -> {
-			BeaconBreakersWaitingPhase waiting = new BeaconBreakersWaitingPhase(game.getSpace(), map, config);
+			BeaconBreakersWaitingPhase waiting = new BeaconBreakersWaitingPhase(game.getGameSpace(), map, config);
 			GameWaitingLobby.applyTo(game, config.getPlayerConfig());
 
 			// Rules
-			game.setRule(GameRule.BLOCK_DROPS, RuleResult.DENY);
-			game.setRule(GameRule.CRAFTING, RuleResult.DENY);
-			game.setRule(GameRule.FALL_DAMAGE, RuleResult.DENY);
-			game.setRule(GameRule.HUNGER, RuleResult.DENY);
-			game.setRule(GameRule.INTERACTION, RuleResult.DENY);
-			game.setRule(GameRule.PORTALS, RuleResult.DENY);
-			game.setRule(GameRule.PVP, RuleResult.DENY);
-			game.setRule(GameRule.THROW_ITEMS, RuleResult.DENY);
+			game.deny(GameRule.BLOCK_DROPS);
+			game.deny(GameRule.CRAFTING);
+			game.deny(GameRule.FALL_DAMAGE);
+			game.deny(GameRule.HUNGER);
+			game.deny(GameRule.INTERACTION);
+			game.deny(GameRule.PORTALS);
+			game.deny(GameRule.PVP);
+			game.deny(GameRule.THROW_ITEMS);
 
 			// Listeners
-			game.on(PlayerAddListener.EVENT, waiting::addPlayer);
-			game.on(PlayerDeathListener.EVENT, waiting::onPlayerDeath);
-			game.on(OfferPlayerListener.EVENT, waiting::offerPlayer);
-			game.on(RequestStartListener.EVENT, waiting::requestStart);
+			game.listen(PlayerAddListener.EVENT, waiting::addPlayer);
+			game.listen(PlayerDeathListener.EVENT, waiting::onPlayerDeath);
+			game.listen(OfferPlayerListener.EVENT, waiting::offerPlayer);
+			game.listen(RequestStartListener.EVENT, waiting::requestStart);
 		});
 	}
 

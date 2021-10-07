@@ -47,7 +47,6 @@ import xyz.nucleoid.plasmid.game.event.PlayerDamageListener;
 import xyz.nucleoid.plasmid.game.event.PlayerDeathListener;
 import xyz.nucleoid.plasmid.game.event.PlayerRemoveListener;
 import xyz.nucleoid.plasmid.game.rule.GameRule;
-import xyz.nucleoid.plasmid.game.rule.RuleResult;
 import xyz.nucleoid.plasmid.widget.GlobalWidgets;
 
 public class BeaconBreakersActivePhase {
@@ -82,22 +81,22 @@ public class BeaconBreakersActivePhase {
 			Set<ServerPlayerEntity> players = Sets.newHashSet(gameSpace.getPlayers());
 			BeaconBreakersActivePhase active = new BeaconBreakersActivePhase(gameSpace, widgets, map, config, players);
 
-			game.setRule(GameRule.BLOCK_DROPS, RuleResult.ALLOW);
-			game.setRule(GameRule.CRAFTING, RuleResult.ALLOW);
-			game.setRule(GameRule.FALL_DAMAGE, RuleResult.ALLOW);
-			game.setRule(GameRule.HUNGER, RuleResult.ALLOW);
-			game.setRule(GameRule.PORTALS, RuleResult.DENY);
-			game.setRule(GameRule.PVP, RuleResult.ALLOW);
+			game.allow(GameRule.BLOCK_DROPS);
+			game.allow(GameRule.CRAFTING);
+			game.allow(GameRule.FALL_DAMAGE);
+			game.allow(GameRule.HUNGER);
+			game.deny(GameRule.PORTALS);
+			game.allow(GameRule.PVP);
 
 			// Listeners
-			game.on(AfterBlockPlaceListener.EVENT, active::afterBlockPlace);
-			game.on(BreakBlockListener.EVENT, active::onBreakBlock);
-			game.on(GameOpenListener.EVENT, active::open);
-			game.on(GameTickListener.EVENT, active::tick);
-			game.on(PlayerAddListener.EVENT, active::addPlayer);
-			game.on(PlayerDamageListener.EVENT, active::onPlayerDamage);
-			game.on(PlayerDeathListener.EVENT, active::onPlayerDeath);
-			game.on(PlayerRemoveListener.EVENT, active::removePlayer);
+			game.listen(AfterBlockPlaceListener.EVENT, active::afterBlockPlace);
+			game.listen(BreakBlockListener.EVENT, active::onBreakBlock);
+			game.listen(GameOpenListener.EVENT, active::open);
+			game.listen(GameTickListener.EVENT, active::tick);
+			game.listen(PlayerAddListener.EVENT, active::addPlayer);
+			game.listen(PlayerDamageListener.EVENT, active::onPlayerDamage);
+			game.listen(PlayerDeathListener.EVENT, active::onPlayerDeath);
+			game.listen(PlayerRemoveListener.EVENT, active::removePlayer);
 		});
 	}
 

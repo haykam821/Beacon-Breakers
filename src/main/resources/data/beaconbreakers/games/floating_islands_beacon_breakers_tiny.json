@@ -1,6 +1,5 @@
 {
 	"type": "beaconbreakers:beacon_breakers",
-	"name": "Tiny Floating Islands Beacon Breakers",
 	"map": {
 		"settings": "minecraft:floating_islands",
 		"x": 5,

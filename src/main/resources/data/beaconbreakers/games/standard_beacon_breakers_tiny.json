@@ -1,6 +1,5 @@
 {
 	"type": "beaconbreakers:beacon_breakers",
-	"name": "Tiny Beacon Breakers",
 	"map": {
 		"settings": "minecraft:overworld",
 		"x": 5,

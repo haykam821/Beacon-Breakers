@@ -4,88 +4,79 @@ import io.github.haykam821.beaconbreakers.game.BeaconBreakersConfig;
 import io.github.haykam821.beaconbreakers.game.map.BeaconBreakersMap;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
-import xyz.nucleoid.fantasy.BubbleWorldConfig;
+import xyz.nucleoid.fantasy.RuntimeWorldConfig;
 import xyz.nucleoid.plasmid.game.GameOpenContext;
 import xyz.nucleoid.plasmid.game.GameOpenProcedure;
+import xyz.nucleoid.plasmid.game.GameResult;
 import xyz.nucleoid.plasmid.game.GameSpace;
-import xyz.nucleoid.plasmid.game.GameWaitingLobby;
-import xyz.nucleoid.plasmid.game.StartResult;
-import xyz.nucleoid.plasmid.game.config.PlayerConfig;
-import xyz.nucleoid.plasmid.game.event.OfferPlayerListener;
-import xyz.nucleoid.plasmid.game.event.PlayerAddListener;
-import xyz.nucleoid.plasmid.game.event.PlayerDeathListener;
-import xyz.nucleoid.plasmid.game.event.RequestStartListener;
-import xyz.nucleoid.plasmid.game.player.JoinResult;
-import xyz.nucleoid.plasmid.game.rule.GameRule;
+import xyz.nucleoid.plasmid.game.common.GameWaitingLobby;
+import xyz.nucleoid.plasmid.game.event.GameActivityEvents;
+import xyz.nucleoid.plasmid.game.event.GamePlayerEvents;
+import xyz.nucleoid.plasmid.game.player.PlayerOffer;
+import xyz.nucleoid.plasmid.game.player.PlayerOfferResult;
+import xyz.nucleoid.plasmid.game.rule.GameRuleType;
+import xyz.nucleoid.stimuli.event.player.PlayerDeathEvent;
 
 public class BeaconBreakersWaitingPhase {
 	private final GameSpace gameSpace;
+	private final ServerWorld world;
 	private final BeaconBreakersMap map;
 	private final BeaconBreakersConfig config;
 
-	public BeaconBreakersWaitingPhase(GameSpace gameSpace, BeaconBreakersMap map, BeaconBreakersConfig config) {
+	public BeaconBreakersWaitingPhase(GameSpace gameSpace, ServerWorld world, BeaconBreakersMap map, BeaconBreakersConfig config) {
 		this.gameSpace = gameSpace;
+		this.world = world;
 		this.map = map;
 		this.config = config;
 	}
 
 	public static GameOpenProcedure open(GameOpenContext<BeaconBreakersConfig> context) {
-		BeaconBreakersConfig config = context.getConfig();
-		BeaconBreakersMap map = new BeaconBreakersMap(context.getServer(), config.getMapConfig());
+		BeaconBreakersConfig config = context.config();
+		BeaconBreakersMap map = new BeaconBreakersMap(context.server(), config.getMapConfig());
 
-		BubbleWorldConfig worldConfig = new BubbleWorldConfig()
-			.setGenerator(map.getChunkGenerator())
-			.setDefaultGameMode(GameMode.ADVENTURE);
+		RuntimeWorldConfig worldConfig = new RuntimeWorldConfig()
+			.setGenerator(map.getChunkGenerator());
 
-		return context.createOpenProcedure(worldConfig, game -> {
-			BeaconBreakersWaitingPhase waiting = new BeaconBreakersWaitingPhase(game.getGameSpace(), map, config);
-			GameWaitingLobby.applyTo(game, config.getPlayerConfig());
+		return context.openWithWorld(worldConfig, (activity, world) -> {
+			BeaconBreakersWaitingPhase waiting = new BeaconBreakersWaitingPhase(activity.getGameSpace(), world, map, config);
+			GameWaitingLobby.addTo(activity, config.getPlayerConfig());
 
 			// Rules
-			game.deny(GameRule.BLOCK_DROPS);
-			game.deny(GameRule.CRAFTING);
-			game.deny(GameRule.FALL_DAMAGE);
-			game.deny(GameRule.HUNGER);
-			game.deny(GameRule.INTERACTION);
-			game.deny(GameRule.PORTALS);
-			game.deny(GameRule.PVP);
-			game.deny(GameRule.THROW_ITEMS);
+			activity.deny(GameRuleType.BLOCK_DROPS);
+			activity.deny(GameRuleType.CRAFTING);
+			activity.deny(GameRuleType.FALL_DAMAGE);
+			activity.deny(GameRuleType.HUNGER);
+			activity.deny(GameRuleType.INTERACTION);
+			activity.deny(GameRuleType.PORTALS);
+			activity.deny(GameRuleType.PVP);
+			activity.deny(GameRuleType.THROW_ITEMS);
 
 			// Listeners
-			game.listen(PlayerAddListener.EVENT, waiting::addPlayer);
-			game.listen(PlayerDeathListener.EVENT, waiting::onPlayerDeath);
-			game.listen(OfferPlayerListener.EVENT, waiting::offerPlayer);
-			game.listen(RequestStartListener.EVENT, waiting::requestStart);
+			activity.listen(PlayerDeathEvent.EVENT, waiting::onPlayerDeath);
+			activity.listen(GamePlayerEvents.OFFER, waiting::offerPlayer);
+			activity.listen(GameActivityEvents.REQUEST_START, waiting::requestStart);
 		});
 	}
 
-	private boolean isFull() {
-		return this.gameSpace.getPlayerCount() >= this.config.getPlayerConfig().getMaxPlayers();
+	private GameResult requestStart() {
+		BeaconBreakersActivePhase.open(this.gameSpace, this.world, this.map, this.config);
+		return GameResult.ok();
 	}
 
-	private JoinResult offerPlayer(ServerPlayerEntity player) {
-		return this.isFull() ? JoinResult.gameFull() : JoinResult.ok();
-	}
-
-	private StartResult requestStart() {
-		PlayerConfig playerConfig = this.config.getPlayerConfig();
-		if (this.gameSpace.getPlayerCount() < playerConfig.getMinPlayers()) {
-			return StartResult.NOT_ENOUGH_PLAYERS;
-		}
-
-		BeaconBreakersActivePhase.open(this.gameSpace, this.map, this.config);
-		return StartResult.OK;
-	}
-
-	private void addPlayer(ServerPlayerEntity player) {
-		BeaconBreakersActivePhase.spawn(this.gameSpace.getWorld(), this.map, this.config.getMapConfig(), player);
+	private PlayerOfferResult offerPlayer(PlayerOffer offer) {
+		Vec3d spawnPos = BeaconBreakersActivePhase.getSpawnPos(this.world, this.map, this.config.getMapConfig(), offer.player());
+		return offer.accept(this.world, spawnPos).and(() -> {
+			offer.player().changeGameMode(GameMode.ADVENTURE);
+		});
 	}
 
 	private ActionResult onPlayerDeath(ServerPlayerEntity player, DamageSource source) {
 		// Respawn player
-		BeaconBreakersActivePhase.spawn(this.gameSpace.getWorld(), this.map, this.config.getMapConfig(), player);
+		BeaconBreakersActivePhase.spawn(this.world, this.map, this.config.getMapConfig(), player);
 		player.setHealth(player.getMaxHealth());
 		return ActionResult.FAIL;
 	}

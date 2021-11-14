@@ -13,7 +13,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import xyz.nucleoid.plasmid.game.ManagedGameSpace;
+import xyz.nucleoid.stimuli.EventInvokers;
+import xyz.nucleoid.stimuli.Stimuli;
 
 @Mixin(BlockItem.class)
 public class BlockItemMixin {
@@ -21,10 +22,8 @@ public class BlockItemMixin {
 	private void invokeAfterBlockPlaceListeners(BlockPos pos, World world, PlayerEntity player, ItemStack stack, BlockState state, CallbackInfoReturnable<Boolean> ci) {
 		if (world.isClient) return;
 
-		ManagedGameSpace gameSpace = ManagedGameSpace.forWorld(world);
-		if (gameSpace == null) return;
-		if (!gameSpace.containsEntity(player)) return;
-		
-		gameSpace.invoker(AfterBlockPlaceListener.EVENT).afterBlockPlace(pos, world, (ServerPlayerEntity) player, stack, state);
+		try (EventInvokers invokers = Stimuli.select().forEntityAt(player, pos)) {
+			invokers.get(AfterBlockPlaceListener.EVENT).afterBlockPlace(pos, world, (ServerPlayerEntity) player, stack, state);
+		}
 	}
 }

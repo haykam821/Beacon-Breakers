@@ -21,7 +21,6 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -39,15 +38,15 @@ import net.minecraft.world.Heightmap;
 import net.minecraft.world.World;
 import xyz.nucleoid.plasmid.game.GameCloseReason;
 import xyz.nucleoid.plasmid.game.GameSpace;
-import xyz.nucleoid.plasmid.game.event.BreakBlockListener;
-import xyz.nucleoid.plasmid.game.event.GameOpenListener;
-import xyz.nucleoid.plasmid.game.event.GameTickListener;
-import xyz.nucleoid.plasmid.game.event.PlayerAddListener;
-import xyz.nucleoid.plasmid.game.event.PlayerDamageListener;
-import xyz.nucleoid.plasmid.game.event.PlayerDeathListener;
-import xyz.nucleoid.plasmid.game.event.PlayerRemoveListener;
-import xyz.nucleoid.plasmid.game.rule.GameRule;
-import xyz.nucleoid.plasmid.widget.GlobalWidgets;
+import xyz.nucleoid.plasmid.game.common.GlobalWidgets;
+import xyz.nucleoid.plasmid.game.event.GameActivityEvents;
+import xyz.nucleoid.plasmid.game.event.GamePlayerEvents;
+import xyz.nucleoid.plasmid.game.player.PlayerOffer;
+import xyz.nucleoid.plasmid.game.player.PlayerOfferResult;
+import xyz.nucleoid.plasmid.game.rule.GameRuleType;
+import xyz.nucleoid.stimuli.event.block.BlockBreakEvent;
+import xyz.nucleoid.stimuli.event.player.PlayerDamageEvent;
+import xyz.nucleoid.stimuli.event.player.PlayerDeathEvent;
 
 public class BeaconBreakersActivePhase {
 	private final GameSpace gameSpace;
@@ -60,9 +59,9 @@ public class BeaconBreakersActivePhase {
 	private boolean singleplayer;
 	private int invulnerability;
 
-	public BeaconBreakersActivePhase(GameSpace gameSpace, GlobalWidgets widgets, BeaconBreakersMap map, BeaconBreakersConfig config, Set<ServerPlayerEntity> players) {
+	public BeaconBreakersActivePhase(GameSpace gameSpace, ServerWorld world, GlobalWidgets widgets, BeaconBreakersMap map, BeaconBreakersConfig config, Set<ServerPlayerEntity> players) {
 		this.gameSpace = gameSpace;
-		this.world = gameSpace.getWorld();
+		this.world = world;
 		this.map = map;
 		this.config = config;
 
@@ -75,38 +74,38 @@ public class BeaconBreakersActivePhase {
 		this.invulnerability = this.config.getInvulnerability();
 	}
 
-	public static void open(GameSpace gameSpace, BeaconBreakersMap map, BeaconBreakersConfig config) {
-		gameSpace.openGame(game -> {
-			GlobalWidgets widgets = new GlobalWidgets(game);
+	public static void open(GameSpace gameSpace, ServerWorld world, BeaconBreakersMap map, BeaconBreakersConfig config) {
+		gameSpace.setActivity(activity -> {
+			GlobalWidgets widgets = GlobalWidgets.addTo(activity);
 			Set<ServerPlayerEntity> players = Sets.newHashSet(gameSpace.getPlayers());
-			BeaconBreakersActivePhase active = new BeaconBreakersActivePhase(gameSpace, widgets, map, config, players);
+			BeaconBreakersActivePhase active = new BeaconBreakersActivePhase(gameSpace, world, widgets, map, config, players);
 
-			game.allow(GameRule.BLOCK_DROPS);
-			game.allow(GameRule.CRAFTING);
-			game.allow(GameRule.FALL_DAMAGE);
-			game.allow(GameRule.HUNGER);
-			game.deny(GameRule.PORTALS);
-			game.allow(GameRule.PVP);
+			activity.allow(GameRuleType.BLOCK_DROPS);
+			activity.allow(GameRuleType.CRAFTING);
+			activity.allow(GameRuleType.FALL_DAMAGE);
+			activity.allow(GameRuleType.HUNGER);
+			activity.deny(GameRuleType.PORTALS);
+			activity.allow(GameRuleType.PVP);
 
 			// Listeners
-			game.listen(AfterBlockPlaceListener.EVENT, active::afterBlockPlace);
-			game.listen(BreakBlockListener.EVENT, active::onBreakBlock);
-			game.listen(GameOpenListener.EVENT, active::open);
-			game.listen(GameTickListener.EVENT, active::tick);
-			game.listen(PlayerAddListener.EVENT, active::addPlayer);
-			game.listen(PlayerDamageListener.EVENT, active::onPlayerDamage);
-			game.listen(PlayerDeathListener.EVENT, active::onPlayerDeath);
-			game.listen(PlayerRemoveListener.EVENT, active::removePlayer);
+			activity.listen(AfterBlockPlaceListener.EVENT, active::afterBlockPlace);
+			activity.listen(BlockBreakEvent.EVENT, active::onBreakBlock);
+			activity.listen(GameActivityEvents.ENABLE, active::enable);
+			activity.listen(GameActivityEvents.TICK, active::tick);
+			activity.listen(GamePlayerEvents.OFFER, active::offerPlayer);
+			activity.listen(PlayerDamageEvent.EVENT, active::onPlayerDamage);
+			activity.listen(PlayerDeathEvent.EVENT, active::onPlayerDeath);
+			activity.listen(GamePlayerEvents.REMOVE, active::removePlayer);
 		});
 	}
 
-	private void open() {
+	private void enable() {
 		this.singleplayer = this.players.size() == 1;
 
 		for (PlayerEntry entry : this.players) {
 			ServerPlayerEntity player = entry.getPlayer();
 
-			player.setGameMode(GameMode.SURVIVAL);
+			player.changeGameMode(GameMode.SURVIVAL);
 			player.giveItemStack(new ItemStack(Main.RESPAWN_BEACONS.getRandom(this.world.getRandom())));
 
 			player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, this.invulnerability, 1, true, false));
@@ -124,7 +123,7 @@ public class BeaconBreakersActivePhase {
 
 			this.invulnerability -= 1;
 			if (this.invulnerability == 0) {
-				this.gameSpace.getPlayers().sendSound(SoundEvents.BLOCK_END_PORTAL_SPAWN, SoundCategory.PLAYERS, 1, 1);
+				this.gameSpace.getPlayers().playSound(SoundEvents.BLOCK_END_PORTAL_SPAWN, SoundCategory.PLAYERS, 1, 1);
 				this.gameSpace.getPlayers().sendMessage(new TranslatableText("text.beaconbreakers.invulnerability.ended").formatted(Formatting.GOLD));
 
 				this.bar.remove();
@@ -160,8 +159,8 @@ public class BeaconBreakersActivePhase {
 		return new TranslatableText("text.beaconbreakers.win.none");
 	}
 
-	private void setSpectator(PlayerEntity player) {
-		player.setGameMode(GameMode.SPECTATOR);
+	private void setSpectator(ServerPlayerEntity player) {
+		player.changeGameMode(GameMode.SPECTATOR);
 	}
 
 	private void sendEliminateMessage(PlayerEntry entry) {
@@ -184,10 +183,11 @@ public class BeaconBreakersActivePhase {
 		return null;
 	}
 
-	private void addPlayer(ServerPlayerEntity player) {
-		if (this.getEntryFromPlayer(player) == null) {
-			this.setSpectator(player);
-		}
+	private PlayerOfferResult offerPlayer(PlayerOffer offer) {
+		Vec3d spawnPos = BeaconBreakersActivePhase.getSpawnPos(world, map, this.config.getMapConfig(), offer.player());
+		return offer.accept(this.world, spawnPos).and(() -> {
+			this.setSpectator(offer.player());
+		});
 	}
 
 	private void removePlayer(ServerPlayerEntity player) {
@@ -240,7 +240,7 @@ public class BeaconBreakersActivePhase {
 	private ActionResult onPlayerDeath(ServerPlayerEntity player, DamageSource source) {
 		if (!this.config.shouldKeepInventory()) {
 			player.vanishCursedItems();
-			player.inventory.dropAll();
+			player.getInventory().dropAll();
 
 			player.dropXp();
 			player.dropShoulderEntities();
@@ -275,7 +275,7 @@ public class BeaconBreakersActivePhase {
 			if (pos.equals(entry.getBeaconPos())) {
 				entry.setBeaconBroken();
 
-				this.gameSpace.getPlayers().sendSound(SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.PLAYERS, 1, 1);
+				this.gameSpace.getPlayers().playSound(SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.PLAYERS, 1, 1);
 				this.gameSpace.getPlayers().sendMessage(new TranslatableText("text.beaconbreakers.beacon_break", entry.getPlayer().getDisplayName(), breaker.getPlayer().getDisplayName()).formatted(Formatting.RED));
 
 				this.sidebar.update();
@@ -286,7 +286,7 @@ public class BeaconBreakersActivePhase {
 		this.sidebar.update();
 	}
 
-	private ActionResult onBreakBlock(ServerPlayerEntity player, BlockPos pos) {
+	private ActionResult onBreakBlock(ServerPlayerEntity player, ServerWorld world, BlockPos pos) {
 		PlayerEntry entry = this.getEntryFromPlayer(player);
 		if (entry == null) return ActionResult.PASS;
 
@@ -341,11 +341,16 @@ public class BeaconBreakersActivePhase {
 		return this.players;
 	}
 
-	public static void spawn(ServerWorld world, BeaconBreakersMap map, BeaconBreakersMapConfig mapConfig, ServerPlayerEntity player) {
+	public static Vec3d getSpawnPos(ServerWorld world, BeaconBreakersMap map, BeaconBreakersMapConfig mapConfig, ServerPlayerEntity player) {
 		int x = mapConfig.getX() * 8;
 		int z = mapConfig.getZ() * 8;
 
-		int surfaceY = map.getChunkGenerator().getHeight(x, z, Heightmap.Type.WORLD_SURFACE);
-		player.teleport(world, x + 0.5, surfaceY, z + 0.5, 0, 0);
+		int surfaceY = map.getChunkGenerator().getHeight(x, z, Heightmap.Type.WORLD_SURFACE, world);
+		return new Vec3d(x + 0.5, surfaceY, z + 0.5);
+	}
+
+	public static void spawn(ServerWorld world, BeaconBreakersMap map, BeaconBreakersMapConfig mapConfig, ServerPlayerEntity player) {
+		Vec3d spawnPos = BeaconBreakersActivePhase.getSpawnPos(world, map, mapConfig, player);
+		player.teleport(world, spawnPos.getX(), spawnPos.getY(), spawnPos.getZ(), 0, 0);
 	}
 }

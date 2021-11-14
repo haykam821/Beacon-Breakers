@@ -1,6 +1,5 @@
 {
 	"type": "beaconbreakers:beacon_breakers",
-	"name": "End Beacon Breakers with Keep Inventory",
 	"map": {
 		"settings": "minecraft:end"
 	},

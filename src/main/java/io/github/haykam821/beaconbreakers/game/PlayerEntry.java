@@ -1,13 +1,15 @@
 package io.github.haykam821.beaconbreakers.game;
 
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 
 public class PlayerEntry {
-	private static final String UNPLACED_BEACON_STRING = "" + Formatting.YELLOW + Formatting.BOLD + "⌛";
-	private static final String PLACED_BEACON_STRING = "" + Formatting.GREEN + Formatting.BOLD + "✔";
-	private static final String NO_BEACON_STRING = "" + Formatting.RED + Formatting.BOLD + "❌";
+	private static final Text UNPLACED_BEACON_ICON = PlayerEntry.createIcon("⌛", Formatting.YELLOW);
+	private static final Text PLACED_BEACON_ICON = PlayerEntry.createIcon("✔", Formatting.GREEN);
+	private static final Text NO_BEACON_ICON= PlayerEntry.createIcon("❌", Formatting.RED);
 
 	private final ServerPlayerEntity player;
 	private BlockPos beaconPos;
@@ -33,22 +35,28 @@ public class PlayerEntry {
 		this.beaconBroken = true;
 	}
 
-	public String getSidebarEntryString() {
-		return this.getSidebarEntryIcon() + " " + Formatting.RESET + this.player.getEntityName();
+	public Text getSidebarEntryText() {
+		return new LiteralText("").append(this.getSidebarEntryIcon()).append(" ").append(this.player.getEntityName());
 	}
 
-	public String getSidebarEntryIcon() {
+	public Text getSidebarEntryIcon() {
 		if (this.beaconPos == null) {
-			return PlayerEntry.UNPLACED_BEACON_STRING;
+			return PlayerEntry.UNPLACED_BEACON_ICON;
 		} else if (this.beaconBroken) {
-			return PlayerEntry.NO_BEACON_STRING;
+			return PlayerEntry.NO_BEACON_ICON;
 		} else {
-			return PlayerEntry.PLACED_BEACON_STRING; 
+			return PlayerEntry.PLACED_BEACON_ICON;
 		}
 	}
 
 	@Override
 	public String toString() {
 		return "PlayerEntry{player=" + this.getPlayer() + ", beaconPos=" + this.getBeaconPos() + "}";
+	}
+
+	private static Text createIcon(String icon, Formatting color) {
+		return new LiteralText(icon).styled(style -> {
+			return style.withColor(color).withBold(true);
+		});
 	}
 }

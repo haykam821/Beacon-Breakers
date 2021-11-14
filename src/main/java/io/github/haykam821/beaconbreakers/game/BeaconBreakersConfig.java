@@ -4,7 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import io.github.haykam821.beaconbreakers.game.map.BeaconBreakersMapConfig;
-import xyz.nucleoid.plasmid.game.config.PlayerConfig;
+import xyz.nucleoid.plasmid.game.common.config.PlayerConfig;
 
 public class BeaconBreakersConfig {
 	public static final Codec<BeaconBreakersConfig> CODEC = RecordCodecBuilder.create(instance -> {

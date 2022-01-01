@@ -8,6 +8,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
+import net.minecraft.world.dimension.DimensionType;
 import xyz.nucleoid.fantasy.RuntimeWorldConfig;
 import xyz.nucleoid.plasmid.game.GameOpenContext;
 import xyz.nucleoid.plasmid.game.GameOpenProcedure;
@@ -36,9 +37,12 @@ public class BeaconBreakersWaitingPhase {
 
 	public static GameOpenProcedure open(GameOpenContext<BeaconBreakersConfig> context) {
 		BeaconBreakersConfig config = context.config();
-		BeaconBreakersMap map = new BeaconBreakersMap(context.server(), config.getMapConfig());
+
+		DimensionType dimensionType = config.getMapConfig().getDimensionType(context.server());
+		BeaconBreakersMap map = new BeaconBreakersMap(context.server(), config.getMapConfig(), dimensionType);
 
 		RuntimeWorldConfig worldConfig = new RuntimeWorldConfig()
+			.setDimensionType(dimensionType)
 			.setGenerator(map.getChunkGenerator());
 
 		return context.openWithWorld(worldConfig, (activity, world) -> {

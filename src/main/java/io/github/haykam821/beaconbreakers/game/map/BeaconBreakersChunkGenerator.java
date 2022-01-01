@@ -9,22 +9,23 @@ import net.minecraft.block.Blocks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.registry.BuiltinRegistries;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.Heightmap;
+import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.biome.source.BiomeSource;
-import net.minecraft.world.biome.source.VanillaLayeredBiomeSource;
+import net.minecraft.world.biome.source.util.MultiNoiseUtil.MultiNoiseSampler;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.gen.ChunkRandom;
 import net.minecraft.world.gen.GenerationStep.Carver;
+import net.minecraft.world.gen.GeneratorOptions;
 import net.minecraft.world.gen.StructureAccessor;
+import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
-import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
 import net.minecraft.world.gen.chunk.VerticalBlockSample;
 import xyz.nucleoid.plasmid.game.world.generator.GameChunkGenerator;
 
@@ -49,10 +50,9 @@ public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
 
 	private static ChunkGenerator createChunkGenerator(MinecraftServer server, BeaconBreakersMapConfig mapConfig) {
 		long seed = server.getOverworld().getRandom().nextLong();
-		BiomeSource biomeSource = new VanillaLayeredBiomeSource(seed, false, false, server.getRegistryManager().get(Registry.BIOME_KEY));
-		
-		ChunkGeneratorSettings chunkGeneratorSettings = BuiltinRegistries.CHUNK_GENERATOR_SETTINGS.get(mapConfig.getChunkGeneratorSettingsId());
-		return new NoiseChunkGenerator(biomeSource, seed, () -> chunkGeneratorSettings);
+
+		RegistryKey<ChunkGeneratorSettings> chunkGeneratorSettingsKey = RegistryKey.of(Registry.CHUNK_GENERATOR_SETTINGS_KEY, mapConfig.getChunkGeneratorSettingsId());
+		return GeneratorOptions.createGenerator(server.getRegistryManager(), seed, chunkGeneratorSettingsKey);
 	}
 
 	private boolean isChunkPosWithinArea(ChunkPos chunkPos) {
@@ -64,26 +64,31 @@ public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
 	}
 
 	@Override
-	public void populateBiomes(Registry<Biome> registry, Chunk chunk) {
+	public CompletableFuture<Chunk> populateBiomes(Registry<Biome> registry, Executor executor, Blender blender, StructureAccessor structures, Chunk chunk) {
 		if (this.isChunkWithinArea(chunk)) {
-			this.chunkGenerator.populateBiomes(registry, chunk);
+			return this.chunkGenerator.populateBiomes(registry, executor, blender, structures, chunk);
 		} else {
-			super.populateBiomes(registry, chunk);
+			return super.populateBiomes(registry, executor, blender, structures, chunk);
 		}
 	}
 
 	@Override
-	public CompletableFuture<Chunk> populateNoise(Executor executor, StructureAccessor structures, Chunk chunk) {
-		if (this.isChunkWithinArea(chunk)) {
-			return this.chunkGenerator.populateNoise(executor, structures, chunk);
-		}
-		return super.populateNoise(executor, structures, chunk);
+	public MultiNoiseSampler getMultiNoiseSampler() {
+		return this.chunkGenerator.getMultiNoiseSampler();
 	}
 
 	@Override
-	public void buildSurface(ChunkRegion region, Chunk chunk) {
+	public CompletableFuture<Chunk> populateNoise(Executor executor, Blender blender, StructureAccessor structures, Chunk chunk) {
 		if (this.isChunkWithinArea(chunk)) {
-			this.chunkGenerator.buildSurface(region, chunk);
+			return this.chunkGenerator.populateNoise(executor, blender, structures, chunk);
+		}
+		return super.populateNoise(executor, blender, structures, chunk);
+	}
+
+	@Override
+	public void buildSurface(ChunkRegion region, StructureAccessor structures, Chunk chunk) {
+		if (this.isChunkWithinArea(chunk)) {
+			this.chunkGenerator.buildSurface(region, structures, chunk);
 		}
 	}
 
@@ -93,28 +98,25 @@ public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
 	}
 
 	@Override
-	public void generateFeatures(ChunkRegion region, StructureAccessor structures) {
-		int chunkX = region.getCenterPos().x;
-		int chunkZ = region.getCenterPos().z;
-
-		ChunkPos chunkPos = new ChunkPos(chunkX, chunkZ);
+	public void generateFeatures(StructureWorldAccess world, Chunk chunk, StructureAccessor structures) {
+		ChunkPos chunkPos = chunk.getPos();
 		if (!this.isChunkPosWithinArea(chunkPos)) return;
+
+		this.chunkGenerator.generateFeatures(world, chunk, structures);
+
+		int chunkX = chunkPos.x;
+		int chunkZ = chunkPos.z;
 	
 		BlockPos pos = new BlockPos(chunkX * 16, 0, chunkZ * 16);
-		Biome biome = this.chunkGenerator.getBiomeSource().getBiomeForNoiseGen((chunkX << 2) + 2, 2, (chunkZ << 2) + 2);
-	
-		ChunkRandom chunkRandom = new ChunkRandom();
-		long populationSeed = chunkRandom.setPopulationSeed(this.seed, pos.getX(), pos.getZ());
-		
-		biome.generateFeatureStep(structures, this.chunkGenerator, region, populationSeed, chunkRandom, pos);
-
 		BlockPos.Mutable mutablePos = new BlockPos.Mutable();
-		Chunk chunk = region.getChunk(chunkPos.getStartPos());
+
+		int bottomY = chunk.getBottomY();
+		int topY = chunk.getTopY() - 1;
 
 		// Top
 		for (int x = 0; x < 16; x++) {
 			for (int z = 0; z < 16; z++) {
-				mutablePos.set(x + pos.getX(), 255, z + pos.getZ());
+				mutablePos.set(x + pos.getX(), chunk.getTopY(), z + pos.getZ());
 				chunk.setBlockState(mutablePos, BARRIER, false);
 			}
 		}
@@ -122,7 +124,7 @@ public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
 		// North
 		if (chunkZ == 0) {
 			for (int x = 0; x < 16; x++) {
-				for (int y = 0; y < 256; y++) {
+				for (int y = bottomY; y < topY; y++) {
 					mutablePos.set(x + pos.getX(), y, pos.getZ());
 					chunk.setBlockState(mutablePos, BARRIER, false);
 				}
@@ -132,7 +134,7 @@ public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
 		// East
 		if (chunkX == this.mapConfig.getX() - 1) {
 			for (int z = 0; z < 16; z++) {
-				for (int y = 0; y < 256; y++) {
+				for (int y = bottomY; y < topY; y++) {
 					mutablePos.set(pos.getX() + 15, y, z + pos.getZ());
 					chunk.setBlockState(mutablePos, BARRIER, false);
 				}
@@ -142,7 +144,7 @@ public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
 		// South
 		if (chunkZ == this.mapConfig.getZ() - 1) {
 			for (int x = 0; x < 16; x++) {
-				for (int y = 0; y < 256; y++) {
+				for (int y = bottomY; y < topY; y++) {
 					mutablePos.set(x + pos.getX(), y, pos.getZ() + 15);
 					chunk.setBlockState(mutablePos, BARRIER, false);
 				}
@@ -152,7 +154,7 @@ public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
 		// West
 		if (chunkX == 0) {
 			for (int z = 0; z < 16; z++) {
-				for (int y = 0; y < 256; y++) {
+				for (int y = bottomY; y < topY; y++) {
 					mutablePos.set(pos.getX(), y, z + pos.getZ());
 					chunk.setBlockState(mutablePos, BARRIER, false);
 				}
@@ -161,10 +163,25 @@ public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
 	}
 
 	@Override
-	public void carve(long seed, BiomeAccess access, Chunk chunk, Carver carver) {
+	public void carve(ChunkRegion region, long seed, BiomeAccess access, StructureAccessor structures, Chunk chunk, Carver carver) {
 		if (this.isChunkWithinArea(chunk)) {
-			this.chunkGenerator.carve(this.seed, access, chunk, carver);
+			this.chunkGenerator.carve(region, this.seed, access, structures, chunk, carver);
 		}
+	}
+
+	@Override
+	public int getSeaLevel() {
+		return this.chunkGenerator.getSeaLevel();
+	}
+
+	@Override
+	public int getMinimumY() {
+		return this.chunkGenerator.getMinimumY();
+	}
+
+	@Override
+	public int getWorldHeight() {
+		return this.chunkGenerator.getWorldHeight();
 	}
 
 	@Override

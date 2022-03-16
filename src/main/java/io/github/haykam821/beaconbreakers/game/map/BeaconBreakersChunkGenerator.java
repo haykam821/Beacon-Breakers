@@ -3,7 +3,6 @@ package io.github.haykam821.beaconbreakers.game.map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
-import io.github.haykam821.beaconbreakers.mixin.ChunkGeneratorAccessor;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.server.MinecraftServer;
@@ -33,14 +32,12 @@ public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
 	private static final BlockState BARRIER = Blocks.BARRIER.getDefaultState();
 
 	private final BeaconBreakersMapConfig mapConfig;
-	private final long seed;
 	private final ChunkGenerator chunkGenerator;
 
 	public BeaconBreakersChunkGenerator(MinecraftServer server, BeaconBreakersMapConfig mapConfig, ChunkGenerator chunkGenerator) {
 		super(server);
 		this.mapConfig = mapConfig;
 
-		this.seed = ((ChunkGeneratorAccessor) chunkGenerator).getWorldSeed();
 		this.chunkGenerator = chunkGenerator;
 	}
 
@@ -165,7 +162,7 @@ public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
 	@Override
 	public void carve(ChunkRegion region, long seed, BiomeAccess access, StructureAccessor structures, Chunk chunk, Carver carver) {
 		if (this.isChunkWithinArea(chunk)) {
-			this.chunkGenerator.carve(region, this.seed, access, structures, chunk, carver);
+			this.chunkGenerator.carve(region, seed, access, structures, chunk, carver);
 		}
 	}
 

@@ -1,5 +1,5 @@
 plugins {
-	id "fabric-loom" version "0.10-SNAPSHOT"
+	id "fabric-loom" version "0.11.32"
 	id "maven-publish"
 }
 
@@ -22,8 +22,8 @@ repositories {
 	jcenter()
 }
 
-minecraft {
-	accessWidener = file("src/main/resources/beaconbreakers.accesswidener")
+loom {
+	accessWidenerPath = file("src/main/resources/beaconbreakers.accesswidener")
 }
 
 dependencies {

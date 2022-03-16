@@ -3,8 +3,7 @@
 	"package": "io.github.haykam821.beaconbreakers.mixin",
 	"compatibilityLevel": "JAVA_8",
 	"mixins": [
-		"BlockItemMixin",
-		"ChunkGeneratorAccessor"
+		"BlockItemMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

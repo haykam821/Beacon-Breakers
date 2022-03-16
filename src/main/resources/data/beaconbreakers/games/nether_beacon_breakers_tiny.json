@@ -1,7 +1,7 @@
 {
 	"type": "beaconbreakers:beacon_breakers",
 	"map": {
-		"dimension_type_id": "minecraft:the_nether",
+		"dimension_type": "minecraft:the_nether",
 		"settings": "minecraft:nether",
 		"x": 5,
 		"z": 5

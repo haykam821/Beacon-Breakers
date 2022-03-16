@@ -15,6 +15,7 @@ import io.github.haykam821.beaconbreakers.game.PlayerEntry;
 import io.github.haykam821.beaconbreakers.game.event.AfterBlockPlaceListener;
 import io.github.haykam821.beaconbreakers.game.map.BeaconBreakersMap;
 import io.github.haykam821.beaconbreakers.game.map.BeaconBreakersMapConfig;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.RespawnAnchorBlock;
 import net.minecraft.entity.EntityType;
@@ -32,6 +33,9 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryEntry;
+import net.minecraft.util.registry.RegistryEntryList;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.Heightmap;
@@ -106,7 +110,14 @@ public class BeaconBreakersActivePhase {
 			ServerPlayerEntity player = entry.getPlayer();
 
 			player.changeGameMode(GameMode.SURVIVAL);
-			player.giveItemStack(new ItemStack(Main.RESPAWN_BEACONS.getRandom(this.world.getRandom())));
+
+			Optional<RegistryEntryList.Named<Block>> maybeBeacons = Registry.BLOCK.getEntryList(Main.RESPAWN_BEACONS);
+			if (maybeBeacons.isPresent()) {
+				Optional<RegistryEntry<Block>> maybeBeacon = maybeBeacons.get().getRandom(this.world.getRandom());
+				if (maybeBeacon.isPresent()) {
+					player.giveItemStack(new ItemStack(maybeBeacon.get().value()));
+				}
+			}
 
 			player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, this.invulnerability, 1, true, false));
 			player.addStatusEffect(new StatusEffectInstance(StatusEffects.SATURATION, this.invulnerability, 127, true, false));

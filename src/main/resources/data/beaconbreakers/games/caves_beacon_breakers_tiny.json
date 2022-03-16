@@ -1,7 +1,7 @@
 {
 	"type": "beaconbreakers:beacon_breakers",
 	"map": {
-		"dimension_type_id": "minecraft:overworld_caves",
+		"dimension_type": "minecraft:overworld_caves",
 		"settings": "minecraft:caves",
 		"x": 5,
 		"z": 5

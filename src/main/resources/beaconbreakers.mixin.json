@@ -3,7 +3,8 @@
 	"package": "io.github.haykam821.beaconbreakers.mixin",
 	"compatibilityLevel": "JAVA_8",
 	"mixins": [
-		"BlockItemMixin"
+		"BlockItemMixin",
+		"ThreadedAnvilChunkStorageMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

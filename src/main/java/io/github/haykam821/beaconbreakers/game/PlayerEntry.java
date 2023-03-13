@@ -1,7 +1,6 @@
 package io.github.haykam821.beaconbreakers.game;
 
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
@@ -36,7 +35,7 @@ public class PlayerEntry {
 	}
 
 	public Text getSidebarEntryText() {
-		return new LiteralText("").append(this.getSidebarEntryIcon()).append(" ").append(this.player.getEntityName());
+		return Text.empty().append(this.getSidebarEntryIcon()).append(" ").append(this.player.getEntityName());
 	}
 
 	public Text getSidebarEntryIcon() {
@@ -55,7 +54,7 @@ public class PlayerEntry {
 	}
 
 	private static Text createIcon(String icon, Formatting color) {
-		return new LiteralText(icon).styled(style -> {
+		return Text.literal(icon).styled(style -> {
 			return style.withColor(color).withBold(true);
 		});
 	}

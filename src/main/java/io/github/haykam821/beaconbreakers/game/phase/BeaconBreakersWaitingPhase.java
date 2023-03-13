@@ -3,11 +3,12 @@ package io.github.haykam821.beaconbreakers.game.phase;
 import io.github.haykam821.beaconbreakers.game.BeaconBreakersConfig;
 import io.github.haykam821.beaconbreakers.game.map.BeaconBreakersMap;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.RegistryEntry;
+import net.minecraft.util.math.random.RandomSeed;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.dimension.DimensionType;
 import xyz.nucleoid.fantasy.RuntimeWorldConfig;
@@ -39,10 +40,11 @@ public class BeaconBreakersWaitingPhase {
 	public static GameOpenProcedure open(GameOpenContext<BeaconBreakersConfig> context) {
 		BeaconBreakersConfig config = context.config();
 
-		RegistryEntry<DimensionType> dimensionType = config.getMapConfig().getDimensionType();
+		RegistryEntry<DimensionType> dimensionType = config.getMapConfig().getDimensionOptions().dimensionTypeEntry();
 		BeaconBreakersMap map = new BeaconBreakersMap(context.server(), config.getMapConfig(), dimensionType.value());
 
 		RuntimeWorldConfig worldConfig = new RuntimeWorldConfig()
+			.setSeed(RandomSeed.getSeed())
 			.setDimensionType(dimensionType)
 			.setGenerator(map.getChunkGenerator());
 

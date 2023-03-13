@@ -11,15 +11,10 @@ public final class BeaconBreakersMap {
 
 	public BeaconBreakersMap(MinecraftServer server, BeaconBreakersMapConfig mapConfig, DimensionType dimensionType) {
 		this.mapConfig = mapConfig;
+		this.chunkGenerator = new BeaconBreakersChunkGenerator(server, this.mapConfig);
 
-		if (mapConfig.getChunkGenerator().isPresent()) {
-			this.chunkGenerator = new BeaconBreakersChunkGenerator(server, this.mapConfig, mapConfig.getChunkGenerator().get());
-		} else {
-			this.chunkGenerator = new BeaconBreakersChunkGenerator(server, this.mapConfig);
-		}
-
-		int minY = dimensionType.getMinimumY();
-		int maxY = minY + dimensionType.getHeight();
+		int minY = dimensionType.minY();
+		int maxY = minY + dimensionType.height();
 
 		this.box = new BlockBox(1, minY + 1, 1, mapConfig.getX() * 16 - 2, maxY - 1, mapConfig.getZ() * 16 - 2);
 	}

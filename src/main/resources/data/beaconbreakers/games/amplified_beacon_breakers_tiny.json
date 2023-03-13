@@ -1,8 +1,8 @@
 {
 	"type": "beaconbreakers:beacon_breakers",
 	"map": {
-		"dimension_type": "minecraft:overworld",
-		"settings": "minecraft:amplified",
+		"dimension_options": "minecraft:overworld",
+		"preset": "minecraft:amplified",
 		"x": 5,
 		"z": 5
 	},

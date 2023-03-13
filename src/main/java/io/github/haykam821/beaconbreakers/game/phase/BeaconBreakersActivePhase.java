@@ -23,19 +23,19 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.MutableText;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryEntry;
-import net.minecraft.util.registry.RegistryEntryList;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.Heightmap;
@@ -111,7 +111,7 @@ public class BeaconBreakersActivePhase {
 
 			player.changeGameMode(GameMode.SURVIVAL);
 
-			Optional<RegistryEntryList.Named<Block>> maybeBeacons = Registry.BLOCK.getEntryList(Main.RESPAWN_BEACONS);
+			Optional<RegistryEntryList.Named<Block>> maybeBeacons = Registries.BLOCK.getEntryList(Main.RESPAWN_BEACONS);
 			if (maybeBeacons.isPresent()) {
 				Optional<RegistryEntry<Block>> maybeBeacon = maybeBeacons.get().getRandom(this.world.getRandom());
 				if (maybeBeacon.isPresent()) {
@@ -135,7 +135,7 @@ public class BeaconBreakersActivePhase {
 			this.invulnerability -= 1;
 			if (this.invulnerability == 0) {
 				this.gameSpace.getPlayers().playSound(SoundEvents.BLOCK_END_PORTAL_SPAWN, SoundCategory.PLAYERS, 1, 1);
-				this.gameSpace.getPlayers().sendMessage(new TranslatableText("text.beaconbreakers.invulnerability.ended").formatted(Formatting.GOLD));
+				this.gameSpace.getPlayers().sendMessage(Text.translatable("text.beaconbreakers.invulnerability.ended").formatted(Formatting.GOLD));
 
 				this.bar.remove();
 			}
@@ -165,9 +165,9 @@ public class BeaconBreakersActivePhase {
 	private MutableText getEndingMessage() {
 		if (this.players.size() == 1) {
 			ServerPlayerEntity winner = this.players.iterator().next().getPlayer();
-			return new TranslatableText("text.beaconbreakers.win", winner.getDisplayName());
+			return Text.translatable("text.beaconbreakers.win", winner.getDisplayName());
 		}
-		return new TranslatableText("text.beaconbreakers.win.none");
+		return Text.translatable("text.beaconbreakers.win.none");
 	}
 
 	private void setSpectator(ServerPlayerEntity player) {
@@ -175,7 +175,7 @@ public class BeaconBreakersActivePhase {
 	}
 
 	private void sendEliminateMessage(PlayerEntry entry) {
-		this.gameSpace.getPlayers().sendMessage(new TranslatableText("text.beaconbreakers.eliminate", entry.getPlayer().getDisplayName()).formatted(Formatting.RED));
+		this.gameSpace.getPlayers().sendMessage(Text.translatable("text.beaconbreakers.eliminate", entry.getPlayer().getDisplayName()).formatted(Formatting.RED));
 	}
 
 	private void eliminate(PlayerEntry entry) {
@@ -287,7 +287,7 @@ public class BeaconBreakersActivePhase {
 				entry.setBeaconBroken();
 
 				this.gameSpace.getPlayers().playSound(SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.PLAYERS, 1, 1);
-				this.gameSpace.getPlayers().sendMessage(new TranslatableText("text.beaconbreakers.beacon_break", entry.getPlayer().getDisplayName(), breaker.getPlayer().getDisplayName()).formatted(Formatting.RED));
+				this.gameSpace.getPlayers().sendMessage(Text.translatable("text.beaconbreakers.beacon_break", entry.getPlayer().getDisplayName(), breaker.getPlayer().getDisplayName()).formatted(Formatting.RED));
 
 				this.sidebar.update();
 				return;
@@ -302,7 +302,7 @@ public class BeaconBreakersActivePhase {
 		if (entry == null) return ActionResult.PASS;
 
 		if (!this.config.shouldAllowSelfBreaking() && pos.equals(entry.getBeaconPos())) {
-			player.sendMessage(new TranslatableText("text.beaconbreakers.cannot_break_own_beacon").formatted(Formatting.RED), false);
+			player.sendMessage(Text.translatable("text.beaconbreakers.cannot_break_own_beacon").formatted(Formatting.RED), false);
 			return ActionResult.FAIL;
 		}
 
@@ -310,7 +310,7 @@ public class BeaconBreakersActivePhase {
 		if (!state.isIn(Main.RESPAWN_BEACONS)) return ActionResult.SUCCESS;
 			
 		if (this.invulnerability > 0) {
-			player.sendMessage(new TranslatableText("text.beaconbreakers.cannot_break_invulnerable_beacon").formatted(Formatting.RED), false);
+			player.sendMessage(Text.translatable("text.beaconbreakers.cannot_break_invulnerable_beacon").formatted(Formatting.RED), false);
 			return ActionResult.FAIL;
 		}
 
@@ -328,7 +328,7 @@ public class BeaconBreakersActivePhase {
 		
 		if (entry.getBeaconPos() != null) return;
 		if (!this.map.getBox().contains(pos)) {
-			entry.getPlayer().sendMessage(new TranslatableText("text.beaconbreakers.cannot_place_out_of_bounds_beacon").formatted(Formatting.RED), false);
+			entry.getPlayer().sendMessage(Text.translatable("text.beaconbreakers.cannot_place_out_of_bounds_beacon").formatted(Formatting.RED), false);
 			return;
 		}
 
@@ -356,7 +356,7 @@ public class BeaconBreakersActivePhase {
 		int x = mapConfig.getX() * 8;
 		int z = mapConfig.getZ() * 8;
 
-		int surfaceY = map.getChunkGenerator().getHeight(x, z, Heightmap.Type.WORLD_SURFACE, world);
+		int surfaceY = map.getChunkGenerator().getHeight(x, z, Heightmap.Type.WORLD_SURFACE, world, world.getChunkManager().getNoiseConfig());
 		return new Vec3d(x + 0.5, surfaceY, z + 0.5);
 	}
 

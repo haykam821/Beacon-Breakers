@@ -1,8 +1,8 @@
 {
 	"type": "beaconbreakers:beacon_breakers",
 	"map": {
-		"dimension_type": "minecraft:the_end",
-		"settings": "minecraft:end",
+		"dimension_options": "minecraft:the_end",
+		"preset": "minecraft:normal",
 		"x": 5,
 		"z": 5
 	},

@@ -1,5 +1,6 @@
 package io.github.haykam821.beaconbreakers.game;
 
+import net.minecraft.screen.ScreenTexts;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -35,7 +36,7 @@ public class PlayerEntry {
 	}
 
 	public Text getSidebarEntryText() {
-		return Text.empty().append(this.getSidebarEntryIcon()).append(" ").append(this.player.getEntityName());
+		return Text.empty().append(this.getSidebarEntryIcon()).append(ScreenTexts.SPACE).append(this.player.getEntityName());
 	}
 
 	public Text getSidebarEntryIcon() {

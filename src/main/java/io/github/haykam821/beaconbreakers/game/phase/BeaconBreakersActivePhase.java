@@ -277,6 +277,7 @@ public class BeaconBreakersActivePhase {
 
 		player.extinguish();
 		player.getDamageTracker().update();
+		player.fallDistance = 0;
 	
 		return ActionResult.FAIL;
 	}

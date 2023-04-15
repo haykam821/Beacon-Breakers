@@ -103,6 +103,16 @@ public class BeaconBreakersActivePhase {
 		});
 	}
 
+	private void giveRespawnBeacon(ServerPlayerEntity player) {
+		Optional<RegistryEntryList.Named<Block>> maybeBeacons = Registries.BLOCK.getEntryList(Main.RESPAWN_BEACONS);
+		if (maybeBeacons.isPresent()) {
+			Optional<RegistryEntry<Block>> maybeBeacon = maybeBeacons.get().getRandom(this.world.getRandom());
+			if (maybeBeacon.isPresent()) {
+				player.giveItemStack(new ItemStack(maybeBeacon.get().value()));
+			}
+		}
+	}
+
 	private void enable() {
 		this.singleplayer = this.players.size() == 1;
 
@@ -111,13 +121,7 @@ public class BeaconBreakersActivePhase {
 
 			player.changeGameMode(GameMode.SURVIVAL);
 
-			Optional<RegistryEntryList.Named<Block>> maybeBeacons = Registries.BLOCK.getEntryList(Main.RESPAWN_BEACONS);
-			if (maybeBeacons.isPresent()) {
-				Optional<RegistryEntry<Block>> maybeBeacon = maybeBeacons.get().getRandom(this.world.getRandom());
-				if (maybeBeacon.isPresent()) {
-					player.giveItemStack(new ItemStack(maybeBeacon.get().value()));
-				}
-			}
+			this.giveRespawnBeacon(player);
 
 			player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, this.invulnerability, 1, true, false));
 			player.addStatusEffect(new StatusEffectInstance(StatusEffects.SATURATION, this.invulnerability, 127, true, false));
@@ -302,12 +306,23 @@ public class BeaconBreakersActivePhase {
 		PlayerEntry entry = this.getEntryFromPlayer(player);
 		if (entry == null) return ActionResult.PASS;
 
-		if (!this.config.shouldAllowSelfBreaking() && pos.equals(entry.getBeaconPos())) {
-			player.sendMessage(Text.translatable("text.beaconbreakers.cannot_break_own_beacon").formatted(Formatting.RED), false);
+		BlockState state = world.getBlockState(pos);
+
+		if (pos.equals(entry.getBeaconPos())) {
+			if (this.invulnerability > 0) {
+				entry.setBeaconPos(null);
+				world.setBlockState(pos, state.getFluidState().getBlockState());
+
+				this.giveRespawnBeacon(player);
+	
+				this.sidebar.update();
+			} else if (!this.config.shouldAllowSelfBreaking()) {
+				player.sendMessage(Text.translatable("text.beaconbreakers.cannot_break_own_beacon").formatted(Formatting.RED), false);
+			}
+
 			return ActionResult.FAIL;
 		}
 
-		BlockState state = player.getEntityWorld().getBlockState(pos);
 		if (!state.isIn(Main.RESPAWN_BEACONS)) return ActionResult.SUCCESS;
 			
 		if (this.invulnerability > 0) {
@@ -316,7 +331,7 @@ public class BeaconBreakersActivePhase {
 		}
 
 		this.breakBeacon(entry, pos);
-		player.getEntityWorld().setBlockState(pos, state.getFluidState().getBlockState());
+		world.setBlockState(pos, state.getFluidState().getBlockState());
 
 		return ActionResult.FAIL;		
 	}

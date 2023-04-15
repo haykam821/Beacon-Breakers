@@ -19,6 +19,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.RespawnAnchorBlock;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
@@ -40,6 +41,7 @@ import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.World;
+import net.minecraft.world.explosion.Explosion;
 import xyz.nucleoid.plasmid.game.GameCloseReason;
 import xyz.nucleoid.plasmid.game.GameSpace;
 import xyz.nucleoid.plasmid.game.common.GlobalWidgets;
@@ -51,6 +53,7 @@ import xyz.nucleoid.plasmid.game.rule.GameRuleType;
 import xyz.nucleoid.stimuli.event.block.BlockBreakEvent;
 import xyz.nucleoid.stimuli.event.player.PlayerDamageEvent;
 import xyz.nucleoid.stimuli.event.player.PlayerDeathEvent;
+import xyz.nucleoid.stimuli.event.world.ExplosionDetonatedEvent;
 
 public class BeaconBreakersActivePhase {
 	private final GameSpace gameSpace;
@@ -101,6 +104,7 @@ public class BeaconBreakersActivePhase {
 			activity.listen(PlayerDamageEvent.EVENT, active::onPlayerDamage);
 			activity.listen(PlayerDeathEvent.EVENT, active::onPlayerDeath);
 			activity.listen(GamePlayerEvents.REMOVE, active::removePlayer);
+			activity.listen(ExplosionDetonatedEvent.EVENT, active::onExplosionDetonated);
 		});
 	}
 
@@ -310,24 +314,42 @@ public class BeaconBreakersActivePhase {
 		return ActionResult.FAIL;
 	}
 
-	private void breakBeacon(PlayerEntry breaker, BlockPos pos) {
+	private void breakBeacon(PlayerEntry breaker, BlockPos pos, boolean explosion) {
 		if (this.isGameEnding()) {
 			return;
 		}
+
+		boolean found = false;
 
 		for (PlayerEntry entry : this.players) {
 			if (pos.equals(entry.getBeaconPos())) {
 				entry.setBeaconBroken();
 
 				this.gameSpace.getPlayers().playSound(SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.PLAYERS, 1, 1);
-				this.gameSpace.getPlayers().sendMessage(Text.translatable("text.beaconbreakers.beacon_break", entry.getPlayer().getDisplayName(), breaker.getPlayer().getDisplayName()).formatted(Formatting.RED));
 
-				this.sidebar.update();
-				return;
+				String translationKey = "text.beaconbreakers.beacon_break";
+				if (explosion) translationKey += ".explosion";
+
+				MutableText message;
+				Text playerName = entry.getPlayer().getDisplayName();
+
+				if (breaker == null) {
+					message = Text.translatable(translationKey + ".unattributed", playerName);
+				} else {
+					Text breakerName = breaker.getPlayer().getDisplayName();
+					message = Text.translatable(translationKey, playerName, breakerName);
+				}
+
+				this.gameSpace.getPlayers().sendMessage(message.formatted(Formatting.RED));
+
+				found = true;
+				break;
 			}
 		}
 
-		this.sidebar.update();
+		if (found) {
+			this.sidebar.update();
+		}
 	}
 
 	private ActionResult onBreakBlock(ServerPlayerEntity player, ServerWorld world, BlockPos pos) {
@@ -358,7 +380,7 @@ public class BeaconBreakersActivePhase {
 			return ActionResult.FAIL;
 		}
 
-		this.breakBeacon(entry, pos);
+		this.breakBeacon(entry, pos, false);
 		world.setBlockState(pos, state.getFluidState().getBlockState());
 
 		return ActionResult.FAIL;		
@@ -379,6 +401,39 @@ public class BeaconBreakersActivePhase {
 
 		entry.setBeaconPos(pos);
 		this.sidebar.update();
+	}
+
+	private void onExplosionDetonated(Explosion explosion, boolean particles) {
+		if (explosion.world.isClient()) return;
+		ServerWorld world = (ServerWorld) explosion.world;
+
+		LivingEntity causingEntity = explosion.getCausingEntity();
+		PlayerEntry entry = causingEntity instanceof ServerPlayerEntity player ? this.getEntryFromPlayer(player) : null;
+
+		Iterator<BlockPos> iterator = explosion.getAffectedBlocks().iterator();
+
+		while (iterator.hasNext()) {
+			BlockPos pos = iterator.next();
+
+			// Ignore non-respawn beacons
+			BlockState state = world.getBlockState(pos);
+			if (!state.isIn(Main.RESPAWN_BEACONS)) continue;
+
+			// Prevent players from blowing up beacons during the invulnerability phase
+			if (this.invulnerability > 0) {
+				iterator.remove();
+				continue;
+			}
+
+			// Prevent players from blowing up their own beacons
+			if (!this.config.shouldAllowSelfBreaking() && entry != null && pos.equals(entry.getBeaconPos())) {
+				iterator.remove();
+				continue;
+			}
+
+			this.breakBeacon(entry, pos, true);
+			world.setBlockState(pos, state.getFluidState().getBlockState());
+		}
 	}
 
 	public GameSpace getGameSpace() {

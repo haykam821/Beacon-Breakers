@@ -61,6 +61,7 @@ public class BeaconBreakersActivePhase {
 	private final InvulnerabilityTimerBar bar;
 	private final BeaconBreakersSidebar sidebar;
 	private boolean singleplayer;
+	private int ticksUntilClose = -1;
 	private int invulnerability;
 
 	public BeaconBreakersActivePhase(GameSpace gameSpace, ServerWorld world, GlobalWidgets widgets, BeaconBreakersMap map, BeaconBreakersConfig config, Set<ServerPlayerEntity> players) {
@@ -133,6 +134,16 @@ public class BeaconBreakersActivePhase {
 	}
 	
 	private void tick() {
+		// Decrease ticks until game end to zero
+		if (this.isGameEnding()) {
+			if (this.ticksUntilClose == 0) {
+				this.gameSpace.close(GameCloseReason.FINISHED);
+			}
+
+			this.ticksUntilClose -= 1;
+			return;
+		}
+
 		if (this.invulnerability > 0) {
 			this.bar.tick();
 
@@ -162,8 +173,12 @@ public class BeaconBreakersActivePhase {
 			if (this.players.size() == 1 && this.singleplayer) return;
 
 			this.gameSpace.getPlayers().sendMessage(this.getEndingMessage().formatted(Formatting.GOLD));
-			this.gameSpace.close(GameCloseReason.FINISHED);
+			this.ticksUntilClose = this.config.getTicksUntilClose().get(this.world.getRandom());
 		}
+	}
+
+	public boolean isGameEnding() {
+		return this.ticksUntilClose >= 0;
 	}
 	
 	private MutableText getEndingMessage() {
@@ -179,6 +194,10 @@ public class BeaconBreakersActivePhase {
 	}
 
 	private void sendEliminateMessage(PlayerEntry entry) {
+		if (this.isGameEnding()) {
+			return;
+		}
+
 		this.gameSpace.getPlayers().sendMessage(Text.translatable("text.beaconbreakers.eliminate", entry.getPlayer().getDisplayName()).formatted(Formatting.RED));
 	}
 
@@ -249,10 +268,15 @@ public class BeaconBreakersActivePhase {
 	}
 
 	private ActionResult onPlayerDamage(ServerPlayerEntity player, DamageSource source, float amount) {
-		return this.invulnerability > 0 ? ActionResult.FAIL : ActionResult.PASS;
+		return this.invulnerability > 0 || this.isGameEnding() ? ActionResult.FAIL : ActionResult.PASS;
 	}
 
 	private ActionResult onPlayerDeath(ServerPlayerEntity player, DamageSource source) {
+		if (this.isGameEnding()) {
+			BeaconBreakersActivePhase.spawn(this.world, this.map, this.config.getMapConfig(), player);
+			return ActionResult.FAIL;
+		}
+
 		if (!this.config.shouldKeepInventory()) {
 			player.vanishCursedItems();
 			player.getInventory().dropAll();
@@ -287,6 +311,10 @@ public class BeaconBreakersActivePhase {
 	}
 
 	private void breakBeacon(PlayerEntry breaker, BlockPos pos) {
+		if (this.isGameEnding()) {
+			return;
+		}
+
 		for (PlayerEntry entry : this.players) {
 			if (pos.equals(entry.getBeaconPos())) {
 				entry.setBeaconBroken();
@@ -337,6 +365,7 @@ public class BeaconBreakersActivePhase {
 	}
 
 	private void afterBlockPlace(BlockPos pos, World world, ServerPlayerEntity player, ItemStack stack, BlockState state) {
+		if (this.isGameEnding()) return;
 		if (!state.isIn(Main.RESPAWN_BEACONS)) return;
 		
 		PlayerEntry entry = this.getEntryFromPlayer(player);

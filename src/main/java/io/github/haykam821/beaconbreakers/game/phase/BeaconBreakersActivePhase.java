@@ -15,12 +15,15 @@ import io.github.haykam821.beaconbreakers.game.PlayerEntry;
 import io.github.haykam821.beaconbreakers.game.event.AfterBlockPlaceListener;
 import io.github.haykam821.beaconbreakers.game.map.BeaconBreakersMap;
 import io.github.haykam821.beaconbreakers.game.map.BeaconBreakersMapConfig;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.RespawnAnchorBlock;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -47,6 +50,7 @@ import xyz.nucleoid.plasmid.game.player.PlayerOffer;
 import xyz.nucleoid.plasmid.game.player.PlayerOfferResult;
 import xyz.nucleoid.plasmid.game.rule.GameRuleType;
 import xyz.nucleoid.stimuli.event.block.BlockBreakEvent;
+import xyz.nucleoid.stimuli.event.item.ItemThrowEvent;
 import xyz.nucleoid.stimuli.event.player.PlayerDamageEvent;
 import xyz.nucleoid.stimuli.event.player.PlayerDeathEvent;
 import xyz.nucleoid.stimuli.event.world.ExplosionDetonatedEvent;
@@ -101,6 +105,7 @@ public class BeaconBreakersActivePhase {
 			activity.listen(PlayerDeathEvent.EVENT, active::onPlayerDeath);
 			activity.listen(GamePlayerEvents.REMOVE, active::removePlayer);
 			activity.listen(ExplosionDetonatedEvent.EVENT, active::onExplosionDetonated);
+			activity.listen(ItemThrowEvent.EVENT, active::onThrowItem);
 		});
 	}
 
@@ -441,6 +446,19 @@ public class BeaconBreakersActivePhase {
 			this.breakBeacon(entry, pos, true);
 			world.setBlockState(pos, state.getFluidState().getBlockState());
 		}
+	}
+
+	@SuppressWarnings("deprecation")
+	private ActionResult onThrowItem(ServerPlayerEntity player, int slot, ItemStack stack) {
+		if (stack.getItem() instanceof BlockItem blockItem) {
+			RegistryEntry<Block> entry = blockItem.getBlock().getRegistryEntry();
+			
+			if (entry.isIn(Main.RESPAWN_BEACONS)) {
+				return ActionResult.FAIL;
+			}
+		}
+
+		return ActionResult.PASS;
 	}
 
 	public GameSpace getGameSpace() {

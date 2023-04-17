@@ -260,15 +260,24 @@ public class BeaconBreakersActivePhase {
 			return null;
 		}
 
+		int topY = this.world.getTopY() - 3;
+
 		Optional<Vec3d> spawnOptional = RespawnAnchorBlock.findRespawnPosition(EntityType.PLAYER, world, beaconPos);
 		if (spawnOptional.isPresent()) {
 			Vec3d spawn = spawnOptional.get();
-			if (spawn.getY() <= 255) {
+			if (spawn.getY() <= topY) {
 				return spawn;
 			}
 		}
 	
-		return new Vec3d(beaconPos.getX() + 0.5, beaconPos.getY(), beaconPos.getZ() + 0.5);
+		Direction direction = Direction.Type.HORIZONTAL.random(this.world.getRandom());
+		float widthOffset = beaconPos.getY() > topY ? EntityType.PLAYER.getWidth() : 0;
+
+		double x = beaconPos.getX() + 0.5 + (direction.getOffsetX() * widthOffset);
+		double y = Math.min(beaconPos.getY() + 1, topY);
+		double z = beaconPos.getZ() + 0.5 + (direction.getOffsetZ() * widthOffset);
+
+		return new Vec3d(x, y, z);
 	}
 
 	private ActionResult attemptBeaconRespawn(PlayerEntry entry) {

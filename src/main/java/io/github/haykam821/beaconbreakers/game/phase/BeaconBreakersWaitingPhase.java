@@ -22,6 +22,7 @@ import xyz.nucleoid.plasmid.game.event.GamePlayerEvents;
 import xyz.nucleoid.plasmid.game.player.PlayerOffer;
 import xyz.nucleoid.plasmid.game.player.PlayerOfferResult;
 import xyz.nucleoid.plasmid.game.rule.GameRuleType;
+import xyz.nucleoid.stimuli.event.player.PlayerDamageEvent;
 import xyz.nucleoid.stimuli.event.player.PlayerDeathEvent;
 
 public class BeaconBreakersWaitingPhase {
@@ -63,6 +64,7 @@ public class BeaconBreakersWaitingPhase {
 			activity.deny(GameRuleType.THROW_ITEMS);
 
 			// Listeners
+			activity.listen(PlayerDamageEvent.EVENT, waiting::onPlayerDamage);
 			activity.listen(PlayerDeathEvent.EVENT, waiting::onPlayerDeath);
 			activity.listen(GamePlayerEvents.OFFER, waiting::offerPlayer);
 			activity.listen(GameActivityEvents.REQUEST_START, waiting::requestStart);
@@ -79,6 +81,10 @@ public class BeaconBreakersWaitingPhase {
 		return offer.accept(this.world, spawnPos).and(() -> {
 			offer.player().changeGameMode(GameMode.ADVENTURE);
 		});
+	}
+
+	private ActionResult onPlayerDamage(ServerPlayerEntity player, DamageSource source, float amount) {
+		return ActionResult.FAIL;
 	}
 
 	private ActionResult onPlayerDeath(ServerPlayerEntity player, DamageSource source) {

@@ -2,3 +2,4 @@ accessWidener	v1	named
 accessible	method	net/minecraft/entity/LivingEntity	dropXp	()V
 accessible	method	net/minecraft/entity/player/PlayerEntity	vanishCursedItems	()V
 accessible	method	net/minecraft/entity/player/PlayerEntity	dropShoulderEntities	()V
+accessible	field	net/minecraft/world/explosion/Explosion	world	Lnet/minecraft/world/World;

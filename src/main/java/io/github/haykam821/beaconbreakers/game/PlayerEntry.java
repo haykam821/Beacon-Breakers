@@ -12,6 +12,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.entry.RegistryEntryList;
+import net.minecraft.screen.ScreenTexts;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -124,7 +125,7 @@ public class PlayerEntry {
 	}
 
 	public Text getSidebarEntryText() {
-		return Text.empty().append(this.getSidebarEntryIcon()).append(" ").append(this.getSidebarName());
+		return Text.empty().append(this.getSidebarEntryIcon()).append(ScreenTexts.SPACE).append(this.getSidebarName());
 	}
 
 	public Text getSidebarEntryIcon() {

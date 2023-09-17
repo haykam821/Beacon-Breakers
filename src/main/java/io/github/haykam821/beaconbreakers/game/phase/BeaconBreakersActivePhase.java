@@ -11,10 +11,11 @@ import io.github.haykam821.beaconbreakers.Main;
 import io.github.haykam821.beaconbreakers.game.BeaconBreakersConfig;
 import io.github.haykam821.beaconbreakers.game.BeaconBreakersSidebar;
 import io.github.haykam821.beaconbreakers.game.InvulnerabilityTimerBar;
-import io.github.haykam821.beaconbreakers.game.PlayerEntry;
 import io.github.haykam821.beaconbreakers.game.event.AfterBlockPlaceListener;
 import io.github.haykam821.beaconbreakers.game.map.BeaconBreakersMap;
 import io.github.haykam821.beaconbreakers.game.map.BeaconBreakersMapConfig;
+import io.github.haykam821.beaconbreakers.game.player.BeaconPlacement;
+import io.github.haykam821.beaconbreakers.game.player.PlayerEntry;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.RespawnAnchorBlock;
@@ -250,10 +251,11 @@ public class BeaconBreakersActivePhase {
 	}
 
 	private Vec3d getRespawnPos(PlayerEntry entry) {
-		BlockPos beaconPos = entry.getBeaconPos();
-		if (beaconPos == null) {
+		if (!(entry.getBeacon() instanceof BeaconPlacement.Placed placed)) {
 			return null;
 		}
+
+		BlockPos beaconPos = placed.pos();
 
 		BlockState beaconState = this.world.getBlockState(beaconPos);
 		if (!beaconState.isIn(Main.RESPAWN_BEACONS)) {
@@ -343,8 +345,8 @@ public class BeaconBreakersActivePhase {
 		boolean found = false;
 
 		for (PlayerEntry entry : this.players) {
-			if (pos.equals(entry.getBeaconPos())) {
-				entry.setBeaconBroken();
+			if (entry.getBeacon().isAt(pos)) {
+				entry.setBeacon(BeaconPlacement.Broken.INSTANCE);
 
 				this.gameSpace.getPlayers().playSound(SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.PLAYERS, 1, 1);
 
@@ -379,9 +381,9 @@ public class BeaconBreakersActivePhase {
 
 		BlockState state = world.getBlockState(pos);
 
-		if (pos.equals(entry.getBeaconPos())) {
+		if (entry.getBeacon().isAt(pos)) {
 			if (this.invulnerability > 0) {
-				entry.setBeaconPos(null);
+				entry.setBeacon(BeaconPlacement.Unplaced.INSTANCE);
 				world.setBlockState(pos, state.getFluidState().getBlockState());
 
 				entry.giveRespawnBeacon();
@@ -413,14 +415,14 @@ public class BeaconBreakersActivePhase {
 		
 		PlayerEntry entry = this.getEntryFromPlayer(player);
 		if (entry == null) return;
-		
-		if (entry.getBeaconPos() != null) return;
+
+		if (!(entry.getBeacon() instanceof BeaconPlacement.Unplaced)) return;
 		if (!this.map.getBox().contains(pos)) {
 			entry.sendMessage(Text.translatable("text.beaconbreakers.cannot_place_out_of_bounds_beacon").formatted(Formatting.RED), false);
 			return;
 		}
 
-		entry.setBeaconPos(pos);
+		entry.setBeacon(new BeaconPlacement.Placed(pos));
 		this.sidebar.update();
 	}
 
@@ -447,7 +449,7 @@ public class BeaconBreakersActivePhase {
 			}
 
 			// Prevent players from blowing up their own beacons
-			if (!this.config.shouldAllowSelfBreaking() && entry != null && pos.equals(entry.getBeaconPos())) {
+			if (!this.config.shouldAllowSelfBreaking() && entry != null && entry.getBeacon().isAt(pos)) {
 				iterator.remove();
 				continue;
 			}

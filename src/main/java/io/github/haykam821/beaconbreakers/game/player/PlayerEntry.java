@@ -1,4 +1,4 @@
-package io.github.haykam821.beaconbreakers.game;
+package io.github.haykam821.beaconbreakers.game.player;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -15,15 +15,9 @@ import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameMode;
 
 public class PlayerEntry {
-	private static final Text UNPLACED_BEACON_ICON = PlayerEntry.createIcon("⌛", Formatting.YELLOW);
-	private static final Text PLACED_BEACON_ICON = PlayerEntry.createIcon("✔", Formatting.GREEN);
-	private static final Text NO_BEACON_ICON= PlayerEntry.createIcon("❌", Formatting.RED);
-
 	private ServerPlayerEntity player;
 	private UUID uuid;
 	private Text name;
@@ -31,8 +25,7 @@ public class PlayerEntry {
 
 	private final BeaconBreakersActivePhase phase;
 
-	private BlockPos beaconPos;
-	private boolean beaconBroken = false;
+	private BeaconPlacement beacon = BeaconPlacement.Unplaced.INSTANCE;
 
 	public PlayerEntry(ServerPlayerEntity player, BeaconBreakersActivePhase phase) {
 		this.player = player;
@@ -70,7 +63,7 @@ public class PlayerEntry {
 
 	public void giveRespawnBeacon() {
 		if (this.player == null) return;
-		if (this.getBeaconPos() != null) return;
+		if (!(this.beacon instanceof BeaconPlacement.Unplaced)) return;
 
 		Optional<RegistryEntryList.Named<Block>> maybeBeacons = Registries.BLOCK.getEntryList(Main.RESPAWN_BEACONS);
 		if (maybeBeacons.isPresent()) {
@@ -112,40 +105,20 @@ public class PlayerEntry {
 		return this.uuid;
 	}
 
-	public BlockPos getBeaconPos() {
-		return this.beaconPos;
+	public BeaconPlacement getBeacon() {
+		return this.beacon;
 	}
 
-	public void setBeaconPos(BlockPos beaconPos) {
-		this.beaconPos = beaconPos;
-	}
-
-	public void setBeaconBroken() {
-		this.beaconBroken = true;
+	public void setBeacon(BeaconPlacement beacon) {
+		this.beacon = beacon;
 	}
 
 	public Text getSidebarEntryText() {
-		return Text.empty().append(this.getSidebarEntryIcon()).append(ScreenTexts.SPACE).append(this.getSidebarName());
-	}
-
-	public Text getSidebarEntryIcon() {
-		if (this.beaconPos == null) {
-			return PlayerEntry.UNPLACED_BEACON_ICON;
-		} else if (this.beaconBroken) {
-			return PlayerEntry.NO_BEACON_ICON;
-		} else {
-			return PlayerEntry.PLACED_BEACON_ICON;
-		}
+		return Text.empty().append(this.beacon.getSidebarEntryIcon()).append(ScreenTexts.SPACE).append(this.getSidebarName());
 	}
 
 	@Override
 	public String toString() {
-		return "PlayerEntry{player=" + this.getPlayer() + ", beaconPos=" + this.getBeaconPos() + "}";
-	}
-
-	private static Text createIcon(String icon, Formatting color) {
-		return Text.literal(icon).styled(style -> {
-			return style.withColor(color).withBold(true);
-		});
+		return "PlayerEntry{player=" + this.getPlayer() + ", beacon=" + this.beacon + "}";
 	}
 }

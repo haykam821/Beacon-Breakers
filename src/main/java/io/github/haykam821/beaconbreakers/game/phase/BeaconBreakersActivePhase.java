@@ -304,15 +304,9 @@ public class BeaconBreakersActivePhase {
 			return ActionResult.FAIL;
 		}
 
-		if (!this.config.shouldKeepInventory()) {
-			player.vanishCursedItems();
-			player.getInventory().dropAll();
-
-			player.dropXp();
-			player.dropShoulderEntities();
-		}
-
 		PlayerEntry entry = this.getEntryFromPlayer(player);
+		boolean eliminated = false;
+
 		if (entry != null) {
 			if (this.world.getGameRules().getBoolean(GameRules.SHOW_DEATH_MESSAGES)) {
 				this.gameSpace.getPlayers().sendMessage(player.getDamageTracker().getDeathMessage());
@@ -323,8 +317,17 @@ public class BeaconBreakersActivePhase {
 					BeaconBreakersActivePhase.spawn(this.world, this.map, this.config.getMapConfig(), entry.getPlayer());
 				} else {
 					this.eliminate(entry);
+					eliminated = true;
 				}
 			}
+		}
+
+		if (eliminated || !this.config.shouldKeepInventory()) {
+			player.vanishCursedItems();
+			player.getInventory().dropAll();
+
+			player.dropXp();
+			player.dropShoulderEntities();
 		}
 
 		player.setHealth(player.getMaxHealth());

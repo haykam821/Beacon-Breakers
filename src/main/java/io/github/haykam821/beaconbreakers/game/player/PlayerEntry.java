@@ -83,6 +83,14 @@ public class PlayerEntry {
 		this.player.addStatusEffect(new StatusEffectInstance(StatusEffects.SATURATION, this.phase.getInvulnerability(), 127, true, false));
 	}
 
+	public void dropInventory() {
+		this.player.vanishCursedItems();
+		this.player.getInventory().dropAll();
+
+		this.player.dropXp();
+		this.player.dropShoulderEntities();
+	}
+
 	public void sendMessage(Text message, boolean overlay) {
 		if (this.player != null) {
 			this.player.sendMessage(message, overlay);

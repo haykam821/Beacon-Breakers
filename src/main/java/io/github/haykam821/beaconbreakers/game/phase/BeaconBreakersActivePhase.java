@@ -305,29 +305,27 @@ public class BeaconBreakersActivePhase {
 		}
 
 		PlayerEntry entry = this.getEntryFromPlayer(player);
-		boolean eliminated = false;
 
 		if (entry != null) {
 			if (this.world.getGameRules().getBoolean(GameRules.SHOW_DEATH_MESSAGES)) {
 				this.gameSpace.getPlayers().sendMessage(player.getDamageTracker().getDeathMessage());
 			}
 
+			if (!this.config.shouldKeepInventory()) {
+				entry.dropInventory();
+			}
+
 			if (this.attemptBeaconRespawn(entry) == ActionResult.FAIL) {
 				if (this.invulnerability > 0) {
 					BeaconBreakersActivePhase.spawn(this.world, this.map, this.config.getMapConfig(), entry.getPlayer());
 				} else {
+					if (this.config.shouldKeepInventory()) {
+						entry.dropInventory();
+					}
+
 					this.eliminate(entry);
-					eliminated = true;
 				}
 			}
-		}
-
-		if (eliminated || !this.config.shouldKeepInventory()) {
-			player.vanishCursedItems();
-			player.getInventory().dropAll();
-
-			player.dropXp();
-			player.dropShoulderEntities();
 		}
 
 		player.setHealth(player.getMaxHealth());

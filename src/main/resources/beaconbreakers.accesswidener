@@ -3,3 +3,4 @@ accessible	method	net/minecraft/entity/LivingEntity	dropXp	()V
 accessible	method	net/minecraft/entity/player/PlayerEntity	vanishCursedItems	()V
 accessible	method	net/minecraft/entity/player/PlayerEntity	dropShoulderEntities	()V
 accessible	field	net/minecraft/world/explosion/Explosion	world	Lnet/minecraft/world/World;
+accessible	method	net/minecraft/world/biome/source/MultiNoiseBiomeSource	getBiomeEntries	()Lnet/minecraft/world/biome/source/util/MultiNoiseUtil$Entries;

@@ -32,10 +32,10 @@ public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
 	private final ChunkGenerator chunkGenerator;
 
 	public BeaconBreakersChunkGenerator(MinecraftServer server, BeaconBreakersMapConfig mapConfig) {
-		super(mapConfig.getDimensionOptions().chunkGenerator().getBiomeSource());
+		super(mapConfig.getChunkGenerator().getBiomeSource());
 		this.mapConfig = mapConfig;
 
-		this.chunkGenerator = mapConfig.getDimensionOptions().chunkGenerator();
+		this.chunkGenerator = mapConfig.getChunkGenerator();
 	}
 
 	public ChunkGeneratorSettings getSettings() {

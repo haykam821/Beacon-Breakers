@@ -47,7 +47,7 @@ public class PlayerEntry {
 		this.uuid = this.player.getUuid();
 
 		this.name = this.player.getDisplayName();
-		this.sidebarName = this.player.getEntityName();
+		this.sidebarName = this.player.getNameForScoreboard();
 
 		this.player = null;
 	}
@@ -102,7 +102,7 @@ public class PlayerEntry {
 	}
 
 	private String getSidebarName() {
-		return this.player == null ? this.sidebarName : this.player.getEntityName();
+		return this.player == null ? this.sidebarName : this.player.getNameForScoreboard();
 	}
 
 	public ServerPlayerEntity getPlayer() {

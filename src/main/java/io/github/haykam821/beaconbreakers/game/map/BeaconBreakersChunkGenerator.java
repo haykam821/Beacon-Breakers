@@ -23,9 +23,10 @@ import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
 import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
 import net.minecraft.world.gen.chunk.VerticalBlockSample;
 import net.minecraft.world.gen.noise.NoiseConfig;
+import xyz.nucleoid.fantasy.util.ChunkGeneratorSettingsProvider;
 import xyz.nucleoid.plasmid.game.world.generator.GameChunkGenerator;
 
-public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
+public final class BeaconBreakersChunkGenerator extends GameChunkGenerator implements ChunkGeneratorSettingsProvider {
 	private static final BlockState BARRIER = Blocks.BARRIER.getDefaultState();
 
 	private final BeaconBreakersMapConfig mapConfig;
@@ -38,6 +39,7 @@ public final class BeaconBreakersChunkGenerator extends GameChunkGenerator {
 		this.chunkGenerator = mapConfig.getChunkGenerator();
 	}
 
+	@Override
 	public ChunkGeneratorSettings getSettings() {
 		if (this.chunkGenerator instanceof NoiseChunkGenerator noiseChunkGenerator) {
 			return noiseChunkGenerator.getSettings().value();

@@ -1,7 +1,7 @@
 package io.github.haykam821.beaconbreakers.game;
 
 import io.github.haykam821.beaconbreakers.game.phase.BeaconBreakersActivePhase;
-import io.github.haykam821.beaconbreakers.game.player.PlayerEntry;
+import io.github.haykam821.beaconbreakers.game.player.team.TeamEntry;
 import net.minecraft.text.Text;
 import xyz.nucleoid.plasmid.game.common.GlobalWidgets;
 import xyz.nucleoid.plasmid.game.common.widget.SidebarWidget;
@@ -21,8 +21,8 @@ public class BeaconBreakersSidebar {
 
 	public void update() {
 		this.widget.set(content -> {
-			for (PlayerEntry player : this.phase.getPlayers()) {
-				content.add(player.getSidebarEntryText());
+			for (TeamEntry team : this.phase.getTeams()) {
+				content.add(team.getSidebarEntryText());
 			}
 		});
 	}

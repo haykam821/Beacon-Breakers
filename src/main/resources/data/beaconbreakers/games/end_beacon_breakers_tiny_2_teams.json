@@ -1,0 +1,31 @@
+{
+	"type": "beaconbreakers:beacon_breakers",
+	"map": {
+		"dimension_options": "minecraft:the_end",
+		"preset": "minecraft:normal",
+		"x": 5,
+		"z": 5
+	},
+	"players": {
+		"min": 1,
+		"max": 32,
+		"threshold": 4
+	},
+	"teams": [
+		{
+			"key": "red",
+			"name": {
+				"translate": "color.minecraft.red"
+			},
+			"color": "red"
+		},
+		{
+			"key": "blue",
+			"name": {
+				"translate": "color.minecraft.blue"
+			},
+			"color": "blue"
+		}
+	],
+	"keep_inventory": true
+}

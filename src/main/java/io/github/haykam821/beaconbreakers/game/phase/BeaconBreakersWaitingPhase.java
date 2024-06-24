@@ -17,6 +17,7 @@ import xyz.nucleoid.plasmid.game.GameOpenProcedure;
 import xyz.nucleoid.plasmid.game.GameResult;
 import xyz.nucleoid.plasmid.game.GameSpace;
 import xyz.nucleoid.plasmid.game.common.GameWaitingLobby;
+import xyz.nucleoid.plasmid.game.common.team.TeamSelectionLobby;
 import xyz.nucleoid.plasmid.game.event.GameActivityEvents;
 import xyz.nucleoid.plasmid.game.event.GamePlayerEvents;
 import xyz.nucleoid.plasmid.game.player.PlayerOffer;
@@ -28,12 +29,14 @@ import xyz.nucleoid.stimuli.event.player.PlayerDeathEvent;
 public class BeaconBreakersWaitingPhase {
 	private final GameSpace gameSpace;
 	private final ServerWorld world;
+	private final TeamSelectionLobby teamSelection;
 	private final BeaconBreakersMap map;
 	private final BeaconBreakersConfig config;
 
-	public BeaconBreakersWaitingPhase(GameSpace gameSpace, ServerWorld world, BeaconBreakersMap map, BeaconBreakersConfig config) {
+	public BeaconBreakersWaitingPhase(GameSpace gameSpace, ServerWorld world, TeamSelectionLobby teamSelection, BeaconBreakersMap map, BeaconBreakersConfig config) {
 		this.gameSpace = gameSpace;
 		this.world = world;
+		this.teamSelection = teamSelection;
 		this.map = map;
 		this.config = config;
 	}
@@ -50,7 +53,9 @@ public class BeaconBreakersWaitingPhase {
 			.setGenerator(map.getChunkGenerator());
 
 		return context.openWithWorld(worldConfig, (activity, world) -> {
-			BeaconBreakersWaitingPhase waiting = new BeaconBreakersWaitingPhase(activity.getGameSpace(), world, map, config);
+			TeamSelectionLobby teamSelection = config.getTeams().isPresent() ? TeamSelectionLobby.addTo(activity, config.getTeams().get()) : null;
+
+			BeaconBreakersWaitingPhase waiting = new BeaconBreakersWaitingPhase(activity.getGameSpace(), world, teamSelection, map, config);
 			GameWaitingLobby.addTo(activity, config.getPlayerConfig());
 
 			// Rules
@@ -72,7 +77,7 @@ public class BeaconBreakersWaitingPhase {
 	}
 
 	private GameResult requestStart() {
-		BeaconBreakersActivePhase.open(this.gameSpace, this.world, this.map, this.config);
+		BeaconBreakersActivePhase.open(this.gameSpace, this.world, this.teamSelection, this.map, this.config);
 		return GameResult.ok();
 	}
 

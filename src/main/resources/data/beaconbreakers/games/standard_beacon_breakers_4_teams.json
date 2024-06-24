@@ -1,0 +1,43 @@
+{
+	"type": "beaconbreakers:beacon_breakers",
+	"map": {
+		"dimension_options": "minecraft:overworld",
+		"preset": "minecraft:normal",
+		"excluded_biomes": "#minecraft:is_ocean"
+	},
+	"players": {
+		"min": 1,
+		"max": 32,
+		"threshold": 4
+	},
+	"teams": [
+		{
+			"key": "red",
+			"name": {
+				"translate": "color.minecraft.red"
+			},
+			"color": "red"
+		},
+		{
+			"key": "green",
+			"name": {
+				"translate": "color.minecraft.green"
+			},
+			"color": "green"
+		},
+		{
+			"key": "blue",
+			"name": {
+				"translate": "color.minecraft.blue"
+			},
+			"color": "blue"
+		},
+		{
+			"key": "yellow",
+			"name": {
+				"translate": "color.minecraft.yellow"
+			},
+			"color": "yellow"
+		}
+	]
+}

@@ -1,7 +1,8 @@
 package io.github.haykam821.beaconbreakers.game.player.team;
 
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.HashSet;
+import java.util.Set;
 
 import io.github.haykam821.beaconbreakers.game.phase.BeaconBreakersActivePhase;
 import io.github.haykam821.beaconbreakers.game.player.BeaconPlacement;
@@ -32,15 +33,17 @@ public abstract class TeamEntry {
 	}
 
 	public final void tick() {
-		Iterator<PlayerEntry> iterator = this.getPlayers().iterator();
+		Set<PlayerEntry> removed = new HashSet<>();
 
-		while (iterator.hasNext()) {
-			PlayerEntry entry = iterator.next();
-
+		for (PlayerEntry entry : this.getPlayers()) {
 			if (entry.tick()) {
 				this.getPhase().applyEliminationToPlayer(entry);
-				iterator.remove();
+				removed.add(entry);
 			}
+		}
+
+		for (PlayerEntry entry : removed) {
+			this.removePlayer(entry);
 		}
 	}
 

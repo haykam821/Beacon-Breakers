@@ -73,6 +73,19 @@ public abstract class TeamEntry {
 		return Text.translatable("text.beaconbreakers.cannot_break_own_beacon");
 	}
 
+	public final MutableText getTattleMessageFor(PlayerEntry entry) {
+		boolean own = entry != null && this == entry.getTeam();
+		return own ? this.getOwnTattleMessage() : this.getTattleMessage();
+	}
+
+	protected MutableText getTattleMessage() {
+		return Text.translatable("text.beaconbreakers.tattle", this.getName());
+	}
+
+	protected MutableText getOwnTattleMessage() {
+		return Text.translatable("text.beaconbreakers.tattle.own");
+	}
+
 	public MutableText getWinMessage() {
 		return Text.translatable("text.beaconbreakers.win", this.getName());
 	}

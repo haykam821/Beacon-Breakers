@@ -51,6 +51,16 @@ public class MultipleTeamEntry extends TeamEntry {
 	}
 
 	@Override
+	protected MutableText getTattleMessage() {
+		return Text.translatable("text.beaconbreakers.tattle.team", this.getName());
+	}
+
+	@Override
+	protected MutableText getOwnTattleMessage() {
+		return Text.translatable("text.beaconbreakers.tattle.own.team");
+	}
+
+	@Override
 	public MutableText getWinMessage() {
 		return Text.translatable("text.beaconbreakers.win.team", this.getName());
 	}

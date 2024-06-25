@@ -33,6 +33,8 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
@@ -53,6 +55,7 @@ import xyz.nucleoid.plasmid.game.player.PlayerOffer;
 import xyz.nucleoid.plasmid.game.player.PlayerOfferResult;
 import xyz.nucleoid.plasmid.game.rule.GameRuleType;
 import xyz.nucleoid.stimuli.event.block.BlockBreakEvent;
+import xyz.nucleoid.stimuli.event.block.BlockUseEvent;
 import xyz.nucleoid.stimuli.event.item.ItemThrowEvent;
 import xyz.nucleoid.stimuli.event.player.PlayerDamageEvent;
 import xyz.nucleoid.stimuli.event.player.PlayerDeathEvent;
@@ -102,6 +105,7 @@ public class BeaconBreakersActivePhase {
 
 			// Listeners
 			activity.listen(AfterBlockPlaceListener.EVENT, active::afterBlockPlace);
+			activity.listen(BlockUseEvent.EVENT, active::onUseBlock);
 			activity.listen(BlockBreakEvent.EVENT, active::onBreakBlock);
 			activity.listen(GameActivityEvents.ENABLE, active::enable);
 			activity.listen(GameActivityEvents.TICK, active::tick);
@@ -433,6 +437,24 @@ public class BeaconBreakersActivePhase {
 
 		team.setBeacon(new BeaconPlacement.Placed(pos));
 		this.sidebar.update();
+	}
+
+	private ActionResult onUseBlock(ServerPlayerEntity player, Hand hand, BlockHitResult hitResult) {
+		BlockPos pos = hitResult.getBlockPos();
+		BlockState state = this.world.getBlockState(pos);
+
+		if (state.isIn(Main.RESPAWN_BEACONS)) {
+			for (TeamEntry team : this.teams) {
+				if (team.getBeacon().isAt(pos)) {
+					PlayerEntry entry = this.getEntryFromPlayer(player);
+					player.sendMessage(team.getTattleMessageFor(entry), true);
+
+					return ActionResult.FAIL;
+				}
+			}
+		}
+
+		return ActionResult.PASS;
 	}
 
 	private void onExplosionDetonated(Explosion explosion, boolean particles) {

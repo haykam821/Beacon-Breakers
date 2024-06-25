@@ -47,6 +47,7 @@ import net.minecraft.world.explosion.Explosion;
 import xyz.nucleoid.plasmid.game.GameCloseReason;
 import xyz.nucleoid.plasmid.game.GameSpace;
 import xyz.nucleoid.plasmid.game.common.GlobalWidgets;
+import xyz.nucleoid.plasmid.game.common.team.TeamChat;
 import xyz.nucleoid.plasmid.game.common.team.TeamManager;
 import xyz.nucleoid.plasmid.game.common.team.TeamSelectionLobby;
 import xyz.nucleoid.plasmid.game.event.GameActivityEvents;
@@ -93,6 +94,10 @@ public class BeaconBreakersActivePhase {
 		gameSpace.setActivity(activity -> {
 			TeamManager teamManager = TeamManager.addTo(activity);
 			GlobalWidgets widgets = GlobalWidgets.addTo(activity);
+
+			if (config.getTeams().isPresent()) {
+				TeamChat.addTo(activity, teamManager);
+			}
 
 			BeaconBreakersActivePhase active = new BeaconBreakersActivePhase(gameSpace, world, teamSelection, teamManager, widgets, map, config);
 

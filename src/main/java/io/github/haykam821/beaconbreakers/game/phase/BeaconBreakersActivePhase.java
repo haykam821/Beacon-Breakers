@@ -445,16 +445,18 @@ public class BeaconBreakersActivePhase {
 	}
 
 	private ActionResult onUseBlock(ServerPlayerEntity player, Hand hand, BlockHitResult hitResult) {
-		BlockPos pos = hitResult.getBlockPos();
-		BlockState state = this.world.getBlockState(pos);
+		if (!player.shouldCancelInteraction() || (player.getMainHandStack().isEmpty() && player.getOffHandStack().isEmpty())) {
+			BlockPos pos = hitResult.getBlockPos();
+			BlockState state = this.world.getBlockState(pos);
 
-		if (state.isIn(Main.RESPAWN_BEACONS)) {
-			for (TeamEntry team : this.teams) {
-				if (team.getBeacon().isAt(pos)) {
-					PlayerEntry entry = this.getEntryFromPlayer(player);
-					player.sendMessage(team.getTattleMessageFor(entry), true);
+			if (state.isIn(Main.RESPAWN_BEACONS)) {
+				for (TeamEntry team : this.teams) {
+					if (team.getBeacon().isAt(pos)) {
+						PlayerEntry entry = this.getEntryFromPlayer(player);
+						player.sendMessage(team.getTattleMessageFor(entry), true);
 
-					return ActionResult.FAIL;
+						return ActionResult.FAIL;
+					}
 				}
 			}
 		}

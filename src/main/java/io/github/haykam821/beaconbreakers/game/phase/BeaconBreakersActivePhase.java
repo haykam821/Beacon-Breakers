@@ -356,6 +356,7 @@ public class BeaconBreakersActivePhase {
 
 		player.setHealth(player.getMaxHealth());
 		player.getHungerManager().setFoodLevel(20);
+		player.setAir(player.getMaxAir());
 
 		player.extinguish();
 		player.getDamageTracker().update();

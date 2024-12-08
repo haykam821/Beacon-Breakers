@@ -3,19 +3,20 @@ package io.github.haykam821.beaconbreakers.game;
 import java.util.Optional;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import io.github.haykam821.beaconbreakers.game.map.BeaconBreakersMapConfig;
 import net.minecraft.SharedConstants;
 import net.minecraft.util.math.intprovider.ConstantIntProvider;
 import net.minecraft.util.math.intprovider.IntProvider;
-import xyz.nucleoid.plasmid.game.common.config.PlayerConfig;
-import xyz.nucleoid.plasmid.game.common.team.GameTeamList;
+import xyz.nucleoid.plasmid.api.game.common.config.WaitingLobbyConfig;
+import xyz.nucleoid.plasmid.api.game.common.team.GameTeamList;
 
 public class BeaconBreakersConfig {
-	public static final Codec<BeaconBreakersConfig> CODEC = RecordCodecBuilder.create(instance -> {
+	public static final MapCodec<BeaconBreakersConfig> CODEC = RecordCodecBuilder.mapCodec(instance -> {
 		return instance.group(
-			PlayerConfig.CODEC.fieldOf("players").forGetter(BeaconBreakersConfig::getPlayerConfig),
+			WaitingLobbyConfig.CODEC.fieldOf("players").forGetter(BeaconBreakersConfig::getPlayerConfig),
 			BeaconBreakersMapConfig.CODEC.fieldOf("map").forGetter(BeaconBreakersConfig::getMapConfig),
 			GameTeamList.CODEC.optionalFieldOf("teams").forGetter(BeaconBreakersConfig::getTeams),
 			IntProvider.NON_NEGATIVE_CODEC.optionalFieldOf("ticks_until_close", ConstantIntProvider.create(SharedConstants.TICKS_PER_SECOND * 10)).forGetter(BeaconBreakersConfig::getTicksUntilClose),
@@ -25,7 +26,7 @@ public class BeaconBreakersConfig {
 		).apply(instance, BeaconBreakersConfig::new);
 	});
 
-	private final PlayerConfig playerConfig;
+	private final WaitingLobbyConfig playerConfig;
 	private final BeaconBreakersMapConfig mapConfig;
 	private final Optional<GameTeamList> teams;
 	private final IntProvider ticksUntilClose;
@@ -33,7 +34,7 @@ public class BeaconBreakersConfig {
 	private final boolean keepInventory;
 	private final boolean allowSelfBreaking;
 
-	public BeaconBreakersConfig(PlayerConfig playerConfig, BeaconBreakersMapConfig mapConfig, Optional<GameTeamList> teams, IntProvider ticksUntilClose, int invulnerability, boolean keepInventory, boolean allowSelfBreaking) {
+	public BeaconBreakersConfig(WaitingLobbyConfig playerConfig, BeaconBreakersMapConfig mapConfig, Optional<GameTeamList> teams, IntProvider ticksUntilClose, int invulnerability, boolean keepInventory, boolean allowSelfBreaking) {
 		this.playerConfig = playerConfig;
 		this.mapConfig = mapConfig;
 		this.teams = teams;
@@ -43,7 +44,7 @@ public class BeaconBreakersConfig {
 		this.allowSelfBreaking = allowSelfBreaking;
 	}
 
-	public PlayerConfig getPlayerConfig() {
+	public WaitingLobbyConfig getPlayerConfig() {
 		return this.playerConfig;
 	}
 

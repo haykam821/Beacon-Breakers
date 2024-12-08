@@ -24,6 +24,7 @@
 	"icon": "assets/beaconbreakers/icon.png",
 	"depends": {
 		"fabricloader": ">=0.8.0",
-		"plasmid": ">=0.5.0"
+		"java": ">=21",
+		"plasmid": ">=0.6.0"
 	}
 }

@@ -6,16 +6,18 @@ import java.util.UUID;
 import io.github.haykam821.beaconbreakers.Main;
 import io.github.haykam821.beaconbreakers.game.player.team.TeamEntry;
 import net.minecraft.block.Block;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.world.GameMode;
-import xyz.nucleoid.plasmid.util.InventoryUtil;
+import xyz.nucleoid.plasmid.api.util.InventoryUtil;
 
 public class PlayerEntry {
 	private ServerPlayerEntity player;
@@ -58,7 +60,9 @@ public class PlayerEntry {
 		if (this.player == null) return;
 		if (!(this.team.getBeacon() instanceof BeaconPlacement.Unplaced)) return;
 
-		Optional<RegistryEntryList.Named<Block>> maybeBeacons = Registries.BLOCK.getEntryList(Main.RESPAWN_BEACONS);
+		RegistryWrapper.WrapperLookup registries = this.player.getWorld().getRegistryManager();
+		RegistryWrapper<Block> blocks = registries.getOrThrow(RegistryKeys.BLOCK);
+		Optional<RegistryEntryList.Named<Block>> maybeBeacons = blocks.getOptional(Main.RESPAWN_BEACONS);
 		if (maybeBeacons.isPresent()) {
 			Optional<RegistryEntry<Block>> maybeBeacon = maybeBeacons.get().getRandom(this.player.getRandom());
 			if (maybeBeacon.isPresent()) {
@@ -84,11 +88,11 @@ public class PlayerEntry {
 		this.player.addStatusEffect(new StatusEffectInstance(StatusEffects.SATURATION, invulnerability, 127, true, false));
 	}
 
-	public void dropInventory() {
+	public void dropInventory(DamageSource source) {
 		this.player.vanishCursedItems();
 		this.player.getInventory().dropAll();
 
-		this.player.dropXp();
+		this.player.dropXp(this.player.getServerWorld(), source.getAttacker());
 		this.player.dropShoulderEntities();
 	}
 

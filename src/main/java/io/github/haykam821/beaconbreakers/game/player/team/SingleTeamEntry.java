@@ -10,7 +10,7 @@ import io.github.haykam821.beaconbreakers.game.phase.BeaconBreakersActivePhase;
 import io.github.haykam821.beaconbreakers.game.player.PlayerEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
-import xyz.nucleoid.plasmid.game.player.PlayerSet;
+import xyz.nucleoid.plasmid.api.game.player.PlayerSet;
 
 public class SingleTeamEntry extends TeamEntry {
 	private PlayerEntry player = null;
